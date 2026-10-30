@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+.env
+.streamlit/secrets.toml
+# planilhas reais têm CPF, telefone e endereços: nunca versionar
+*.xlsx
+*.xls
