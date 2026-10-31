@@ -10,7 +10,7 @@
   {
    "parameters": {
     "path": "bot-manutencao-7f3a",
-    "responseMode": "lastNode",
+    "responseMode": "responseNode",
     "options": {}
    },
    "type": "n8n-nodes-base.webhook",
@@ -19,9 +19,106 @@
     0,
     0
    ],
-   "id": "e1e66036-4c56-448d-96c9-72dc61012aee",
+   "id": "65ac8c00-18d3-4270-bb5b-3716ad10807c",
    "name": "Webhook",
-   "webhookId": "2970a364-ed2c-4d25-80c3-644173e4498b"
+   "webhookId": "9024a2bf-61aa-448c-953f-229a6a6673f9"
+  },
+  {
+   "parameters": {
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "value": "AKvXsAZo4z5YlIEA",
+     "mode": "list",
+     "cachedResultName": "controle_bot",
+     "cachedResultUrl": "/projects/g7NSooy85ZuYWBNa/datatables/AKvXsAZo4z5YlIEA"
+    },
+    "returnAll": true
+   },
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    200,
+    0
+   ],
+   "id": "2e9b078b-3eb6-4ead-a88d-07c33eac2b3c",
+   "name": "Controle",
+   "executeOnce": true,
+   "alwaysOutputData": true
+  },
+  {
+   "parameters": {
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "value": "mSPz4dkef1EPuy0Q",
+     "mode": "list",
+     "cachedResultName": "fila_ceee",
+     "cachedResultUrl": "/projects/g7NSooy85ZuYWBNa/datatables/mSPz4dkef1EPuy0Q"
+    },
+    "returnAll": true
+   },
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    400,
+    0
+   ],
+   "id": "928ef928-b36c-4d04-b1f2-269078970157",
+   "name": "Fila CEEE",
+   "executeOnce": true,
+   "alwaysOutputData": true
+  },
+  {
+   "parameters": {
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "value": "KItEV4M7mfBXuzS3",
+     "mode": "list",
+     "cachedResultName": "fila_rge",
+     "cachedResultUrl": "/projects/g7NSooy85ZuYWBNa/datatables/KItEV4M7mfBXuzS3"
+    },
+    "returnAll": true
+   },
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    600,
+    0
+   ],
+   "id": "5acbfb73-bd28-4d01-a6c3-9c5ad48a6ad4",
+   "name": "Fila RGE",
+   "executeOnce": true,
+   "alwaysOutputData": true
+  },
+  {
+   "parameters": {
+    "jsCode": "const f = no => $(no).all().map(i => i.json).filter(x => x.id).map(x => ({ linha: x.linha, site: x.site,\n  situacao: x.situacao, protocolo: x.protocolo, gatilho: x.ultimo_gatilho, rep: x.repeticoes,\n  desconhecida: String(x.msg_desconhecida || '').slice(0, 400), em: x.atualizado_em }));\nconst ctrl = $('Controle').all().map(i => i.json).filter(x => x.id).map(x => ({ c: x.concessionaria, status: x.status,\n  ate: x.pausado_ate_ms ? new Date(Number(x.pausado_ate_ms)).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : '',\n  pausas: x.pausas_seguidas,\n  envio: x.ultimo_envio_ms ? new Date(Number(x.ultimo_envio_ms)).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : '',\n  recebida: x.ultima_recebida_ms ? new Date(Number(x.ultima_recebida_ms)).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : '' }));\nreturn [{ json: { controle: ctrl, CEEE: f('Fila CEEE'), RGE: f('Fila RGE') } }];"
+   },
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    800,
+    0
+   ],
+   "id": "e76f9f7c-891b-48c7-bf4c-a8c0b27c3724",
+   "name": "Diagnóstico"
+  },
+  {
+   "parameters": {
+    "respondWith": "json",
+    "responseBody": "={{ JSON.stringify($json) }}",
+    "options": {}
+   },
+   "type": "n8n-nodes-base.respondToWebhook",
+   "typeVersion": 1.1,
+   "position": [
+    1000,
+    -200
+   ],
+   "id": "ebfc289a-886f-4662-96d3-39e9cf0fe49d",
+   "name": "Responder"
   },
   {
    "parameters": {
@@ -38,26 +135,26 @@
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
    "position": [
-    200,
-    -150
+    1000,
+    0
    ],
-   "id": "301d0914-1bff-4700-b79a-27b0efef8ed8",
+   "id": "fd740978-b0c0-417d-8351-5fc99e4826f3",
    "name": "Regras",
    "executeOnce": true,
    "alwaysOutputData": true
   },
   {
    "parameters": {
-    "jsCode": "const r = $input.all().map(i => i.json).find(x => x.id && x.concessionaria === 'CEEE' && String(x.ordem) === '250');\nreturn r ? [{ json: { id: r.id, acao: 'ja_aberto_e_proxima', resposta: '', valor_planilha: 'protocolo já aberto',\n  observacao: 'chamado já existia e foi reforçado: anota e vai para a próxima UC' } }] : [];"
+    "jsCode": "const r = $input.all().map(i => i.json).find(x => x.id && x.concessionaria === 'CEEE' && String(x.ordem) === '80');\nreturn r ? [{ json: { id: r.id, valor_planilha: 'protocolo já aberto',\n  observacao: 'fim da conversa: começa a próxima UC; sem protocolo novo = já existia chamado' } }] : [];"
    },
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    400,
-    -150
+    1200,
+    0
    ],
-   "id": "b3ff6c4c-f778-4328-99de-bced73726311",
-   "name": "Regra 250"
+   "id": "005a0c1f-7ccb-41a9-b9e5-624c5d96602f",
+   "name": "Regra 80"
   },
   {
    "parameters": {
@@ -79,8 +176,6 @@
     "columns": {
      "mappingMode": "defineBelow",
      "value": {
-      "acao": "={{ $json.acao }}",
-      "resposta": "={{ $json.resposta }}",
       "valor_planilha": "={{ $json.valor_planilha }}",
       "observacao": "={{ $json.observacao }}"
      },
@@ -185,47 +280,24 @@
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
    "position": [
-    600,
-    -150
+    1400,
+    0
    ],
-   "id": "ce2e5778-abf0-45e2-902a-bf879ca9abf8",
+   "id": "c621311b-743a-4f06-a0c9-045dfe0fb347",
    "name": "Salvar regra"
   },
   {
    "parameters": {
-    "operation": "get",
-    "dataTableId": {
-     "__rl": true,
-     "value": "mSPz4dkef1EPuy0Q",
-     "mode": "list",
-     "cachedResultName": "fila_ceee",
-     "cachedResultUrl": "/projects/g7NSooy85ZuYWBNa/datatables/mSPz4dkef1EPuy0Q"
-    },
-    "returnAll": true
-   },
-   "type": "n8n-nodes-base.dataTable",
-   "typeVersion": 1.1,
-   "position": [
-    200,
-    0
-   ],
-   "id": "65c152d6-1de7-48cb-8438-19171aaf5115",
-   "name": "Fila",
-   "executeOnce": true,
-   "alwaysOutputData": true
-  },
-  {
-   "parameters": {
-    "jsCode": "const agora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });\nreturn $input.all().map(i => i.json).filter(x => x.id && x.site === 'RSHVL01' && /reforçamos/i.test(String(x.ultimo_gatilho || '')))\n  .map(x => ({ json: { id: x.id, situacao: 'ja_aberto', protocolo: 'protocolo já aberto', atualizado_em: agora } }));"
+    "jsCode": "const agora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });\nreturn $('Fila CEEE').all().map(i => i.json).filter(x => x.id && x.situacao === 'finalizada_sem_protocolo')\n  .map(x => ({ json: { id: x.id, situacao: 'ja_aberto', protocolo: 'protocolo já aberto', atualizado_em: agora } }));"
    },
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
-    400,
-    0
+    1000,
+    200
    ],
-   "id": "c22d686d-0da0-41cb-9acd-3f5686ad6e2e",
-   "name": "RSHVL01"
+   "id": "1b461bbf-d0c9-41ba-9aa0-4d0db3bb584e",
+   "name": "Finalizadas CEEE"
   },
   {
    "parameters": {
@@ -372,70 +444,11 @@
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
    "position": [
-    600,
-    0
+    1200,
+    200
    ],
-   "id": "e09c5f64-e521-4f28-8f2e-7d56363a72d1",
-   "name": "Salvar linha"
-  },
-  {
-   "parameters": {
-    "operation": "get",
-    "dataTableId": {
-     "__rl": true,
-     "value": "Wbmg2rgEHlUh6fTW",
-     "mode": "list",
-     "cachedResultName": "regras_conversa",
-     "cachedResultUrl": "/projects/g7NSooy85ZuYWBNa/datatables/Wbmg2rgEHlUh6fTW"
-    },
-    "returnAll": true
-   },
-   "type": "n8n-nodes-base.dataTable",
-   "typeVersion": 1.1,
-   "position": [
-    200,
-    150
-   ],
-   "id": "4324b60f-6d42-4cab-90c9-7c25078d87b4",
-   "name": "Regras depois",
-   "executeOnce": true,
-   "alwaysOutputData": true
-  },
-  {
-   "parameters": {
-    "operation": "get",
-    "dataTableId": {
-     "__rl": true,
-     "value": "mSPz4dkef1EPuy0Q",
-     "mode": "list",
-     "cachedResultName": "fila_ceee",
-     "cachedResultUrl": "/projects/g7NSooy85ZuYWBNa/datatables/mSPz4dkef1EPuy0Q"
-    },
-    "returnAll": true
-   },
-   "type": "n8n-nodes-base.dataTable",
-   "typeVersion": 1.1,
-   "position": [
-    400,
-    150
-   ],
-   "id": "b8450978-2916-43a7-974f-19fa8a4db75c",
-   "name": "Fila depois",
-   "executeOnce": true,
-   "alwaysOutputData": true
-  },
-  {
-   "parameters": {
-    "jsCode": "const regra = $('Regras depois').all().map(i => i.json).find(x => x.concessionaria === 'CEEE' && String(x.ordem) === '250') || {};\nconst linha = $('Fila depois').all().map(i => i.json).find(x => x.site === 'RSHVL01') || {};\nreturn [{ json: { regra250: { acao: regra.acao, valor: regra.valor_planilha }, RSHVL01: { situacao: linha.situacao, protocolo: linha.protocolo } } }];"
-   },
-   "type": "n8n-nodes-base.code",
-   "typeVersion": 2,
-   "position": [
-    600,
-    150
-   ],
-   "id": "49b6d289-7548-4205-bf2a-4bcfafeeecb5",
-   "name": "Conferir"
+   "id": "b5338223-47ee-482e-9db5-9ed4230a816b",
+   "name": "Salvar linhas"
   }
  ],
  "connections": {
@@ -443,17 +456,61 @@
    "main": [
     [
      {
+      "node": "Controle",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Controle": {
+   "main": [
+    [
+     {
+      "node": "Fila CEEE",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Fila CEEE": {
+   "main": [
+    [
+     {
+      "node": "Fila RGE",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Fila RGE": {
+   "main": [
+    [
+     {
+      "node": "Diagnóstico",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Diagnóstico": {
+   "main": [
+    [
+     {
+      "node": "Responder",
+      "type": "main",
+      "index": 0
+     },
+     {
       "node": "Regras",
       "type": "main",
       "index": 0
      },
      {
-      "node": "Fila",
-      "type": "main",
-      "index": 0
-     },
-     {
-      "node": "Regras depois",
+      "node": "Finalizadas CEEE",
       "type": "main",
       "index": 0
      }
@@ -464,14 +521,14 @@
    "main": [
     [
      {
-      "node": "Regra 250",
+      "node": "Regra 80",
       "type": "main",
       "index": 0
      }
     ]
    ]
   },
-  "Regra 250": {
+  "Regra 80": {
    "main": [
     [
      {
@@ -482,44 +539,11 @@
     ]
    ]
   },
-  "Fila": {
+  "Finalizadas CEEE": {
    "main": [
     [
      {
-      "node": "RSHVL01",
-      "type": "main",
-      "index": 0
-     }
-    ]
-   ]
-  },
-  "RSHVL01": {
-   "main": [
-    [
-     {
-      "node": "Salvar linha",
-      "type": "main",
-      "index": 0
-     }
-    ]
-   ]
-  },
-  "Regras depois": {
-   "main": [
-    [
-     {
-      "node": "Fila depois",
-      "type": "main",
-      "index": 0
-     }
-    ]
-   ]
-  },
-  "Fila depois": {
-   "main": [
-    [
-     {
-      "node": "Conferir",
+      "node": "Salvar linhas",
       "type": "main",
       "index": 0
      }

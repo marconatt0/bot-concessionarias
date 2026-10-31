@@ -218,7 +218,11 @@ if (tipo === 'mensagem') {
       enviar(preencher(regra.resposta, r));
     } else if (acao === 'proxima' || acao === 'responder_e_proxima') {
       enviar(preencher(regra.resposta, r));
-      finalizarAtual('finalizada_sem_protocolo');
+      // valor_planilha na regra de fim (ex.: CEEE "Obrigada por compartilhar" = "protocolo já aberto"):
+      // a conversa terminou sem protocolo novo porque já existia um chamado
+      const valorFim = extrair(regra.valor_planilha, texto);
+      if (valorFim && r.situacao === 'em_andamento') setFila(r, { situacao: 'ja_aberto', protocolo: valorFim });
+      else finalizarAtual('finalizada_sem_protocolo');
       iniciarProxima();
     } else {
       plano.log.push(`ação desconhecida "${regra.acao}" na regra ${regra.ordem}`);
