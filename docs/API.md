@@ -30,9 +30,9 @@ Cria um lote novo. Apaga o lote anterior (linhas das filas e arquivo salvo).
 
 O n8n deve:
 1. Responder **409** `{"ok": false, "erro": "..."}` se `controle_bot` de alguma fila estiver `rodando`, `pausado` ou `aguardando_expiracao`.
-2. Salvar o arquivo em `/files/lotes/<lote_id>.xlsx` e apagar o anterior.
+2. Salvar o arquivo em `/files/lotes/atual.xlsx` e os dados do lote em `/files/lotes/atual.json` (sobrescreve o anterior; `/files` = `/opt/planilhas` na VM).
 3. Limpar `fila_ceee` / `fila_rge` e inserir as linhas (situacao `pendente`), guardando `linha` e `lote_id`.
-4. Gravar o lote em `controle_bot` (lote_id, arquivo_nome, enviado_por, enviado_em) e colocar as duas filas com linhas em `rodando`.
+4. Colocar em `controle_bot` o `lote_id` e o status `rodando` nas filas com linhas (`concluido` nas sem linhas). O bot-vigia começa a primeira UC em até 1 minuto.
 
 Resposta: `200 {"ok": true, "lote_id": "..."}`
 
@@ -68,5 +68,5 @@ Resposta: `200 {"ok": true, "lote_id": "..."}`
 
 ## POST /webhook/bot-cancelar
 
-Coloca as duas filas em `cancelado`, marca as linhas `em_andamento` como `interrompida`
+Coloca as filas ativas em `cancelado`, marca as linhas `em_andamento` como `interrompida`
 e mantém os protocolos já obtidos. Resposta: `{"ok": true}`.

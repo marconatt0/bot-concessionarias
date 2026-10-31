@@ -38,9 +38,20 @@ pytest
 2. Settings → Secrets: cole o conteúdo de `.streamlit/secrets.toml.example` com os valores reais
    (URL do ngrok, token, hash bcrypt da senha do gerente).
 
-## Falta (lado da VM)
+## Lado da VM
 
-- Webhooks `bot-lote`, `bot-resultado`, `bot-arquivo`, `bot-cancelar` no n8n — contrato em [docs/API.md](docs/API.md).
-- Caddy + ngrok no docker-compose da VM (domínio estático do ngrok, `BOT_TOKEN` e `NGROK_AUTHTOKEN` no `.env`).
+Tudo em [`vm/`](vm/):
+
+- `gerar_webhooks.py` gera os workflows `bot-lote`, `bot-resultado`, `bot-arquivo` e `bot-cancelar` (`vm/n8n/`),
+  importados com `n8n import:workflow` e publicados com `n8n publish:workflow`. Contrato em [docs/API.md](docs/API.md).
+- `docker-compose.yml` + `Caddyfile`: stack separada `bot-tunel` em `/opt/bot-tunel`, na rede `whatsapp_default`.
+  O Caddy só deixa passar os 4 webhooks com o header `X-Bot-Token`; o ngrok publica o Caddy no domínio estático.
+- `/opt/bot-tunel/.env` (não versionado): `BOT_TOKEN` (gerado na VM), `NGROK_DOMAIN`, `NGROK_AUTHTOKEN`.
+
+Ligar o túnel depois de preencher o `.env`:
+
+```bash
+cd /opt/bot-tunel && docker compose --profile tunel up -d
+```
 
 > Não versione planilhas reais: elas têm CPF, telefone e endereços (`*.xlsx` está no `.gitignore`).
