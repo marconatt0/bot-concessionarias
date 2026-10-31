@@ -8,9 +8,9 @@ CC = ["concessionaria", "jid", "numero", "status", "msg_inicial", "cpf", "nome",
 CTRL = """return $('Controle').all().map(i => i.json).filter(x => x.id && ['CEEE', 'RGE'].includes(x.concessionaria))
   .map(x => ({ json: { id: x.id, status: 'parado', lote_id: '', ultimo_envio_ms: '', pausado_ate_ms: '', pausas_seguidas: '0' } }));"""
 INFO = """const c = $('Controle').all().map(i => i.json).filter(x => x.id);
-return [{ json: c.map(x => ({ conc: x.concessionaria, cpf_tamanho: String(x.cpf || '').length,
+return [{ json: { dados: c.map(x => ({ conc: x.concessionaria, cpf_tamanho: String(x.cpf || '').length,
   cpf_so_digitos: /^\\d+$/.test(String(x.cpf || '')), cpf_tem_espaco: /\\s/.test(String(x.cpf || '')),
-  nome_ok: !!String(x.nome || '').trim(), email_ok: /@/.test(String(x.email || '')), celular_tamanho: String(x.celular || '').length })) }];"""
+  nome_ok: !!String(x.nome || '').trim(), email_ok: /@/.test(String(x.email || '')), celular_tamanho: String(x.celular || '').length })) } }];"""
 
 
 def limpar(name, t, pos):

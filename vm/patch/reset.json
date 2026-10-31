@@ -19,7 +19,7 @@
     0,
     0
    ],
-   "id": "a6a9c869-f793-4f49-9068-7bd3dece9282",
+   "id": "3931dafc-f966-41b2-9513-a911a0884329",
    "name": "Webhook",
    "webhookId": "5d1c1d2e-0c1a-4a55-9a51-reset0000001"
   },
@@ -41,7 +41,7 @@
     200,
     0
    ],
-   "id": "53fff383-888f-4c7e-86b1-a233901aede0",
+   "id": "4b46edbf-489a-4ec2-b054-93b3554c59ab",
    "name": "Controle",
    "executeOnce": true,
    "alwaysOutputData": true
@@ -64,7 +64,7 @@
     400,
     -150
    ],
-   "id": "4dddace5-7bb1-4d8e-83b0-6acf23c71e33",
+   "id": "e6c05278-d9b8-45d1-bce4-4232fe40d129",
    "name": "Limpar CEEE",
    "executeOnce": true,
    "alwaysOutputData": true
@@ -87,7 +87,7 @@
     600,
     -150
    ],
-   "id": "1eb127ee-d8d2-4ee7-86bf-7d48d561c5a0",
+   "id": "3615b3c7-a651-4b9c-89a3-da559801922e",
    "name": "Limpar RGE",
    "executeOnce": true,
    "alwaysOutputData": true
@@ -102,7 +102,7 @@
     400,
     0
    ],
-   "id": "bfe2cf81-d2ed-4a64-9f02-82e4e2982d8b",
+   "id": "fd85dec3-c5c0-42c0-84fe-393d8f15da2d",
    "name": "Parar filas"
   },
   {
@@ -295,12 +295,12 @@
     600,
     0
    ],
-   "id": "b095e9aa-16cf-4859-8e9a-b236f0151ca4",
+   "id": "a596dde6-8160-4e6f-b416-f9dfbb2face7",
    "name": "Salvar controle"
   },
   {
    "parameters": {
-    "jsCode": "const c = $('Controle').all().map(i => i.json).filter(x => x.id);\nreturn [{ json: c.map(x => ({ conc: x.concessionaria, cpf_tamanho: String(x.cpf || '').length,\n  cpf_so_digitos: /^\\d+$/.test(String(x.cpf || '')), cpf_tem_espaco: /\\s/.test(String(x.cpf || '')),\n  nome_ok: !!String(x.nome || '').trim(), email_ok: /@/.test(String(x.email || '')), celular_tamanho: String(x.celular || '').length })) }];"
+    "jsCode": "const c = $('Controle').all().map(i => i.json).filter(x => x.id);\nreturn [{ json: { dados: c.map(x => ({ conc: x.concessionaria, cpf_tamanho: String(x.cpf || '').length,\n  cpf_so_digitos: /^\\d+$/.test(String(x.cpf || '')), cpf_tem_espaco: /\\s/.test(String(x.cpf || '')),\n  nome_ok: !!String(x.nome || '').trim(), email_ok: /@/.test(String(x.email || '')), celular_tamanho: String(x.celular || '').length })) } }];"
    },
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -308,7 +308,7 @@
     400,
     150
    ],
-   "id": "957d1518-ba57-459e-ad48-8235a479224d",
+   "id": "302ca3ce-f83f-4e6c-a1a9-4510edbac6d1",
    "name": "Conferir dados"
   }
  ],
