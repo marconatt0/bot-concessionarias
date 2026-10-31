@@ -14,7 +14,7 @@ while true; do
 done
 sed -i "s|^NGROK_AUTHTOKEN=.*|NGROK_AUTHTOKEN=$TOK|" .env
 unset TOK
-echo "Authtoken gravado no .env (${#TOK} oculto)."
+echo "Authtoken gravado no .env."
 docker compose --profile tunel up -d 2>&1 | tail -2
 sleep 8
 docker compose logs --tail 5 ngrok 2>&1 | grep -oE 'msg="[^"]*"|err=[^ ]*' | tail -5
