@@ -19,9 +19,9 @@
     0,
     0
    ],
-   "id": "d31be5af-8c09-4ca9-b474-f3b70da92b03",
+   "id": "74455f19-1bec-4606-b924-ca7c40339c06",
    "name": "Webhook",
-   "webhookId": "56cfff76-d109-40c3-a95a-a0aaa1429613"
+   "webhookId": "b0fb2cbb-0bec-49ca-a322-25ad9b9a7817"
   },
   {
    "parameters": {
@@ -41,7 +41,7 @@
     200,
     0
    ],
-   "id": "d164196b-b23d-4337-a04f-1efbd7f5b29a",
+   "id": "cdc2f056-5640-44b3-9220-955fb073c244",
    "name": "Controle",
    "executeOnce": true,
    "alwaysOutputData": true
@@ -64,7 +64,7 @@
     400,
     0
    ],
-   "id": "7ca22421-4887-4334-b5d2-15ba001d94a8",
+   "id": "2afafa42-b284-43d4-9f43-93d36121ff08",
    "name": "Fila CEEE",
    "executeOnce": true,
    "alwaysOutputData": true
@@ -87,7 +87,7 @@
     600,
     0
    ],
-   "id": "f227b134-7702-4c3b-abfd-bdedd9dd90d6",
+   "id": "3b16e977-f670-497e-b53f-7cb554221ca9",
    "name": "Fila RGE",
    "executeOnce": true,
    "alwaysOutputData": true
@@ -102,7 +102,7 @@
     800,
     0
    ],
-   "id": "5d27712d-c5a5-462d-a33d-ffe0e1ac221c",
+   "id": "2b3d71bc-fddf-496a-825a-231486177ecf",
    "name": "Diagnóstico"
   },
   {
@@ -117,7 +117,7 @@
     1000,
     -200
    ],
-   "id": "a0914a6e-2229-4f51-ab6c-04e724c9e3d4",
+   "id": "7f720450-d885-4821-97d1-4b98e6af2610",
    "name": "Responder"
   },
   {
@@ -138,7 +138,7 @@
     1000,
     0
    ],
-   "id": "987ad089-f438-45b3-b5f9-65a37b09e0ce",
+   "id": "b86ef73f-6de4-41f3-a7ef-77c0f917f92e",
    "name": "Regras",
    "executeOnce": true,
    "alwaysOutputData": true
@@ -153,7 +153,7 @@
     1200,
     0
    ],
-   "id": "4d5ec047-8885-40f0-982c-3ce87ed71dff",
+   "id": "3443e7cf-df15-40bc-8cb7-311843f134b0",
    "name": "Regra 80"
   },
   {
@@ -283,8 +283,151 @@
     1400,
     0
    ],
-   "id": "49a040ad-1482-4485-9982-187ff335f505",
+   "id": "6aa13c92-23c9-48e1-8181-2b31a9a96609",
    "name": "Salvar regra"
+  },
+  {
+   "parameters": {
+    "jsCode": "const novas = [{\"concessionaria\": \"CEEE\", \"ordem\": \"85\", \"gatilho\": \"Fico muito feliz de te ajudar\", \"tipo\": \"contem\", \"acao\": \"proxima\", \"resposta\": \"\", \"valor_planilha\": \"protocolo já aberto\", \"ativo\": \"sim\", \"observacao\": \"fim da conversa depois da pesquisa\"}, {\"concessionaria\": \"CEEE\", \"ordem\": \"225\", \"gatilho\": \"Muito satisfeito\", \"tipo\": \"contem\", \"acao\": \"responder\", \"resposta\": \"5\", \"valor_planilha\": \"\", \"ativo\": \"sim\", \"observacao\": \"pesquisa de satisfação com opções 1 a 5\"}, {\"concessionaria\": \"CEEE\", \"ordem\": \"950\", \"gatilho\": \"Eu sou a Clara\", \"tipo\": \"contem\", \"acao\": \"reiniciar_se_no_meio\", \"resposta\": \"\", \"valor_planilha\": \"\", \"ativo\": \"sim\", \"observacao\": \"saudação no meio da conversa = Clara reiniciou; recomeça a mesma UC\"}];\nconst tem = $('Regras').all().map(i => i.json).filter(x => x.id).map(x => x.concessionaria + '|' + x.ordem);\nreturn novas.filter(r => !tem.includes(r.concessionaria + '|' + r.ordem)).map(r => ({ json: r }));"
+   },
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    1200,
+    -200
+   ],
+   "id": "95380b8a-cabe-4a29-b0a5-8ea8601b70da",
+   "name": "Regras novas"
+  },
+  {
+   "parameters": {
+    "operation": "insert",
+    "dataTableId": {
+     "__rl": true,
+     "value": "Wbmg2rgEHlUh6fTW",
+     "mode": "list",
+     "cachedResultName": "regras_conversa",
+     "cachedResultUrl": "/projects/g7NSooy85ZuYWBNa/datatables/Wbmg2rgEHlUh6fTW"
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "concessionaria": "={{ $json.concessionaria }}",
+      "ordem": "={{ $json.ordem }}",
+      "gatilho": "={{ $json.gatilho }}",
+      "tipo": "={{ $json.tipo }}",
+      "acao": "={{ $json.acao }}",
+      "resposta": "={{ $json.resposta }}",
+      "valor_planilha": "={{ $json.valor_planilha }}",
+      "ativo": "={{ $json.ativo }}",
+      "observacao": "={{ $json.observacao }}"
+     },
+     "matchingColumns": [],
+     "schema": [
+      {
+       "id": "concessionaria",
+       "displayName": "concessionaria",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "ordem",
+       "displayName": "ordem",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "gatilho",
+       "displayName": "gatilho",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "tipo",
+       "displayName": "tipo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "acao",
+       "displayName": "acao",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "resposta",
+       "displayName": "resposta",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "valor_planilha",
+       "displayName": "valor_planilha",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "ativo",
+       "displayName": "ativo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "observacao",
+       "displayName": "observacao",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      }
+     ],
+     "attemptToConvertTypes": false,
+     "convertFieldsToString": false
+    },
+    "options": {}
+   },
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    1400,
+    -200
+   ],
+   "id": "a101d9e5-8c8f-4f55-a504-81d2b4ad7a30",
+   "name": "Inserir regras"
   },
   {
    "parameters": {
@@ -296,7 +439,7 @@
     1000,
     200
    ],
-   "id": "fb63a269-d2b8-4759-a949-522ad383e847",
+   "id": "ccda7745-acab-46e4-81aa-77582f11e8d8",
    "name": "Finalizadas CEEE"
   },
   {
@@ -447,7 +590,7 @@
     1200,
     200
    ],
-   "id": "68803059-c876-4b4a-8ed7-189e98c372e7",
+   "id": "c3d0e621-195b-4037-b85a-e313d037cdc0",
    "name": "Salvar linhas"
   },
   {
@@ -460,7 +603,7 @@
     1000,
     400
    ],
-   "id": "11fbe773-09d9-4514-8927-7533e11ec29a",
+   "id": "409bf402-af71-4d2a-8b6b-35a9ad166213",
    "name": "Finalizadas RGE"
   },
   {
@@ -611,7 +754,7 @@
     1200,
     400
    ],
-   "id": "c9650ee4-7e17-4188-b8a7-c5485a13d12f",
+   "id": "2063c733-76f8-470f-a667-9808f29d8bcd",
    "name": "Salvar linhas RGE"
   }
  ],
@@ -690,7 +833,23 @@
    "main": [
     [
      {
+      "node": "Regras novas",
+      "type": "main",
+      "index": 0
+     },
+     {
       "node": "Regra 80",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Regras novas": {
+   "main": [
+    [
+     {
+      "node": "Inserir regras",
       "type": "main",
       "index": 0
      }

@@ -51,6 +51,8 @@ const ctrl = $('Controle').all().map(i => i.json).filter(x => x.id).map(x => ({ 
   recebida: x.ultima_recebida_ms ? new Date(Number(x.ultima_recebida_ms)).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : '' }));
 return [{ json: { controle: ctrl, CEEE: f('Fila CEEE'), RGE: f('Fila RGE') } }];"""
 
+NOVAS = "[{\"concessionaria\": \"CEEE\", \"ordem\": \"85\", \"gatilho\": \"Fico muito feliz de te ajudar\", \"tipo\": \"contem\", \"acao\": \"proxima\", \"resposta\": \"\", \"valor_planilha\": \"protocolo já aberto\", \"ativo\": \"sim\", \"observacao\": \"fim da conversa depois da pesquisa\"}, {\"concessionaria\": \"CEEE\", \"ordem\": \"225\", \"gatilho\": \"Muito satisfeito\", \"tipo\": \"contem\", \"acao\": \"responder\", \"resposta\": \"5\", \"valor_planilha\": \"\", \"ativo\": \"sim\", \"observacao\": \"pesquisa de satisfação com opções 1 a 5\"}, {\"concessionaria\": \"CEEE\", \"ordem\": \"950\", \"gatilho\": \"Eu sou a Clara\", \"tipo\": \"contem\", \"acao\": \"reiniciar_se_no_meio\", \"resposta\": \"\", \"valor_planilha\": \"\", \"ativo\": \"sim\", \"observacao\": \"saudação no meio da conversa = Clara reiniciou; recomeça a mesma UC\"}]"
+
 REGRA80 = """const r = $input.all().map(i => i.json).find(x => x.id && x.concessionaria === 'CEEE' && String(x.ordem) === '80');
 return r ? [{ json: { id: r.id, valor_planilha: 'protocolo já aberto',
   observacao: 'fim da conversa: começa a próxima UC; sem protocolo novo = já existia chamado' } }] : [];"""
@@ -70,6 +72,10 @@ def wf():
           {"respondWith": "json", "responseBody": "={{ JSON.stringify($json) }}", "options": {}}),
         get("Regras", "regras_conversa", [1000, 0]), code("Regra 80", REGRA80, [1200, 0]),
         upd("Salvar regra", "regras_conversa", RC, ["valor_planilha", "observacao"], [1400, 0]),
+        code("Regras novas", "const novas = " + NOVAS + ";\nconst tem = $('Regras').all().map(i => i.json).filter(x => x.id).map(x => x.concessionaria + '|' + x.ordem);\nreturn novas.filter(r => !tem.includes(r.concessionaria + '|' + r.ordem)).map(r => ({ json: r }));", [1200, -200]),
+        n("Inserir regras", "n8n-nodes-base.dataTable", 1.1, [1400, -200], {"operation": "insert", "dataTableId": rl("regras_conversa"),
+          "columns": {"mappingMode": "defineBelow", "value": {c: "={{ $json." + c + " }}" for c in RC}, "matchingColumns": [],
+                      "schema": sch(RC), "attemptToConvertTypes": False, "convertFieldsToString": False}, "options": {}}),
         code("Finalizadas CEEE", FINALIZADAS.replace("__FILA__", "Fila CEEE"), [1000, 200]),
         upd("Salvar linhas", "fila_ceee", FC, ["situacao", "protocolo", "atualizado_em"], [1200, 200]),
         code("Finalizadas RGE", FINALIZADAS.replace("__FILA__", "Fila RGE"), [1000, 400]),
@@ -80,7 +86,7 @@ def wf():
         C.setdefault(a, {"main": [[]]})["main"][0].append({"node": b, "type": "main", "index": 0})
     for a, b in [("Webhook", "Controle"), ("Controle", "Fila CEEE"), ("Fila CEEE", "Fila RGE"),
                  ("Fila RGE", "Diagnóstico"), ("Diagnóstico", "Responder"), ("Diagnóstico", "Regras"),
-                 ("Regras", "Regra 80"), ("Regra 80", "Salvar regra"), ("Diagnóstico", "Finalizadas CEEE"),
+                 ("Regras", "Regras novas"), ("Regras novas", "Inserir regras"), ("Regras", "Regra 80"), ("Regra 80", "Salvar regra"), ("Diagnóstico", "Finalizadas CEEE"),
                  ("Finalizadas CEEE", "Salvar linhas"), ("Diagnóstico", "Finalizadas RGE"),
                  ("Finalizadas RGE", "Salvar linhas RGE")]:
         c(a, b)

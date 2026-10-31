@@ -1,5 +1,5 @@
 #!/bin/bash
-# passo 10: sem 'terminou sem protocolo' (vira protocolo já aberto) nas duas filas + diagnóstico
+# passo 11: regras novas da CEEE (fim 'Que bom', pesquisa 1-5, Clara reiniciando) + diagnóstico
 clear
 C=whatsapp-n8n-1
 RAW="https://api.github.com/repos/marconatt0/bot-concessionarias/contents/vm/patch"
@@ -13,7 +13,7 @@ for CONC in CEEE RGE; do
 const fs=require("fs"); let w=JSON.parse(fs.readFileSync("/tmp/conv.json","utf8")); const arr=Array.isArray(w); if(arr) w=w[0];
 const d=w.nodes.find(n=>n.name==="Decidir"); d.parameters.jsCode=fs.readFileSync(process.argv[1],"utf8");
 fs.writeFileSync("/tmp/conv-novo.json", JSON.stringify(arr?[w]:w));
-console.log(w.name, "atualizado:", !d.parameters.jsCode.includes("finalizada_sem_protocolo"), d.parameters.jsCode.includes("const CONC = \x27"+process.argv[2]+"\x27"));' /tmp/decidir_$low.js $CONC
+console.log(w.name, "atualizado:", !d.parameters.jsCode.includes("finalizada_sem_protocolo") && d.parameters.jsCode.includes("reiniciar_se_no_meio"), d.parameters.jsCode.includes("const CONC = \x27"+process.argv[2]+"\x27"));' /tmp/decidir_$low.js $CONC
   docker exec $C n8n import:workflow --input=/tmp/conv-novo.json >/dev/null 2>&1
   docker exec $C n8n publish:workflow --id=$CID >/dev/null 2>&1
 done
@@ -34,4 +34,4 @@ for k in ("CEEE","RGE"):
     g=lambda x: str(l.get(x) or "")
     print("%3s %-8s %-24s %-20s rep=%s %s | %s" % (g("linha"), g("site"), g("situacao"), g("protocolo")[:20], g("rep"), g("em"), g("gatilho")[:45]))
     if g("desconhecida"): print("      ?? " + repr(g("desconhecida")[:300]))' < /opt/bot-tunel/backup/diagnostico.json
-echo PASSO9-FIM
+echo PASSO11-FIM

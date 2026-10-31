@@ -202,6 +202,19 @@ if (tipo === 'mensagem') {
         enviar(ctrl.msg_inicial || 'ola');
         plano.log.push(`recomeçando a conversa da mesma UC (${n}/${LIMITE_REINICIOS})`);
       }
+    } else if (acao === 'reiniciar_se_no_meio') {
+      // ex.: Clara manda "Olá! Eu sou a Clara..." no meio da conversa = ela reiniciou a sessão.
+      // No começo da conversa é só a saudação normal: ignora.
+      const p = partes(r.ultimo_gatilho);
+      if (p.g) {
+        const n = p.n + 1;
+        if (n > LIMITE_REINICIOS) travou('loop');
+        else {
+          setFila(r, { ultimo_gatilho: `R${n}|`, repeticoes: '0' });
+          enviar(ctrl.msg_inicial || 'ola');
+          plano.log.push(`a concessionária reiniciou a conversa; recomeçando a mesma UC (${n}/${LIMITE_REINICIOS})`);
+        }
+      }
     } else if (acao === 'ja_aberto_e_proxima') {
       // ex.: "Pronto, reforçamos sua solicitação": anota protocolo já aberto e vai para a próxima UC
       marcar(r, regra.gatilho, 1, { protocolo: extrair(regra.valor_planilha, texto) || 'protocolo já aberto',
