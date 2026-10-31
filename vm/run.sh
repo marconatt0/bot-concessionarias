@@ -1,26 +1,33 @@
 #!/bin/bash
-# passo 5: grava o domínio, pede o authtoken (sem mostrar), liga o túnel e testa de fora
+# passo 6: monta o bloco de Secrets do Streamlit Cloud (url, token e hash da senha do gerente)
 cd /opt/bot-tunel
-DOM=swaddling-okay-ligament.ngrok-free.dev
-sed -i "s|^NGROK_DOMAIN=.*|NGROK_DOMAIN=$DOM|" .env
 clear
-echo "Domínio gravado: $DOM"
-echo
+read -rp ">>> Usuário do gerente no site [gerente]: " U; U=${U:-gerente}; U=$(echo "$U" | tr 'A-Z' 'a-z' | tr -cd 'a-z0-9._-')
 while true; do
-  read -rsp ">>> Cole aqui o Authtoken do ngrok e aperte Enter: " TOK; echo
-  TOK=$(printf '%s' "$TOK" | tr -d '[:space:]')
-  if [[ "$TOK" =~ ^[A-Za-z0-9_]{30,80}$ ]]; then break; fi
-  echo "    Isso não é um authtoken (${#TOK} caracteres colados). Provavelmente a VM colou outra coisa."
-  echo "    Selecione o token na página do ngrok com o mouse e clique com o botão do MEIO aqui."
+  read -rsp ">>> Senha do gerente (não aparece): " S1; echo
+  read -rsp ">>> Repita a senha: " S2; echo
+  [ -n "$S1" ] && [ "$S1" = "$S2" ] && break
+  echo "    As senhas não conferem ou estão vazias. De novo."
 done
-grep -v '^NGROK_AUTHTOKEN=' .env > .env.novo; printf 'NGROK_AUTHTOKEN=%s\n' "$TOK" >> .env.novo; chmod 600 .env.novo; mv .env.novo .env
-unset TOK
-echo "Authtoken gravado no .env."
-docker compose --profile tunel up -d --force-recreate ngrok 2>&1 | tail -2
-sleep 8
-docker compose logs --tail 5 ngrok 2>&1 | grep -oE 'msg="[^"]*"|err=[^ ]*' | tail -5
-T=$(grep ^BOT_TOKEN= .env | cut -d= -f2)
-echo "== de fora, com token:"; curl -s -w ' [%{http_code}]\n' -H "X-Bot-Token: $T" -H 'ngrok-skip-browser-warning: 1' https://$DOM/webhook/bot-resultado
-echo "== de fora, sem token:"; curl -s -o /dev/null -w '[%{http_code}]\n' https://$DOM/webhook/bot-resultado
-echo "== editor do n8n de fora:"; curl -s -o /dev/null -w '[%{http_code}]\n' https://$DOM/
-echo PASSO5-FIM
+echo "Gerando o hash (pode levar uns segundos)..."
+H=$(SENHA="$S1" docker run --rm -e SENHA python:3.12-slim sh -c \
+  'pip -q install --disable-pip-version-check --root-user-action=ignore bcrypt >/dev/null 2>&1 && python -c "import bcrypt,os;print(bcrypt.hashpw(os.environ[\"SENHA\"].encode(),bcrypt.gensalt()).decode())"')
+unset S1 S2
+[ -z "$H" ] && { echo "Falhou ao gerar o hash."; exit 1; }
+DOM=$(grep ^NGROK_DOMAIN= .env | cut -d= -f2); T=$(grep ^BOT_TOKEN= .env | cut -d= -f2)
+cat > streamlit-secrets.toml <<EOT
+[n8n]
+url = "https://$DOM"
+token = "$T"
+
+[usuarios]
+$U = "$H"
+EOT
+chmod 600 streamlit-secrets.toml
+clear
+echo "======== copie da linha [n8n] até o fim e cole em Settings > Secrets no Streamlit Cloud ========"
+echo
+cat streamlit-secrets.toml
+echo
+echo "================================================================================================"
+echo "(salvo também em /opt/bot-tunel/streamlit-secrets.toml)"
