@@ -1,0 +1,371 @@
+{
+ "id": "botManutencao001",
+ "name": "bot-manutencao",
+ "active": false,
+ "settings": {
+  "executionOrder": "v1"
+ },
+ "pinData": {},
+ "nodes": [
+  {
+   "parameters": {
+    "path": "bot-manutencao-7f3a",
+    "responseMode": "lastNode",
+    "options": {}
+   },
+   "type": "n8n-nodes-base.webhook",
+   "typeVersion": 2,
+   "position": [
+    0,
+    0
+   ],
+   "id": "a6a9c869-f793-4f49-9068-7bd3dece9282",
+   "name": "Webhook",
+   "webhookId": "5d1c1d2e-0c1a-4a55-9a51-reset0000001"
+  },
+  {
+   "parameters": {
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "value": "AKvXsAZo4z5YlIEA",
+     "mode": "list",
+     "cachedResultName": "controle_bot",
+     "cachedResultUrl": "/projects/g7NSooy85ZuYWBNa/datatables/AKvXsAZo4z5YlIEA"
+    },
+    "returnAll": true
+   },
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    200,
+    0
+   ],
+   "id": "53fff383-888f-4c7e-86b1-a233901aede0",
+   "name": "Controle",
+   "executeOnce": true,
+   "alwaysOutputData": true
+  },
+  {
+   "parameters": {
+    "resource": "table",
+    "operation": "clear",
+    "dataTableId": {
+     "__rl": true,
+     "value": "mSPz4dkef1EPuy0Q",
+     "mode": "list",
+     "cachedResultName": "fila_ceee",
+     "cachedResultUrl": "/projects/g7NSooy85ZuYWBNa/datatables/mSPz4dkef1EPuy0Q"
+    }
+   },
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    400,
+    -150
+   ],
+   "id": "4dddace5-7bb1-4d8e-83b0-6acf23c71e33",
+   "name": "Limpar CEEE",
+   "executeOnce": true,
+   "alwaysOutputData": true
+  },
+  {
+   "parameters": {
+    "resource": "table",
+    "operation": "clear",
+    "dataTableId": {
+     "__rl": true,
+     "value": "KItEV4M7mfBXuzS3",
+     "mode": "list",
+     "cachedResultName": "fila_rge",
+     "cachedResultUrl": "/projects/g7NSooy85ZuYWBNa/datatables/KItEV4M7mfBXuzS3"
+    }
+   },
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    600,
+    -150
+   ],
+   "id": "1eb127ee-d8d2-4ee7-86bf-7d48d561c5a0",
+   "name": "Limpar RGE",
+   "executeOnce": true,
+   "alwaysOutputData": true
+  },
+  {
+   "parameters": {
+    "jsCode": "return $('Controle').all().map(i => i.json).filter(x => x.id && ['CEEE', 'RGE'].includes(x.concessionaria))\n  .map(x => ({ json: { id: x.id, status: 'parado', lote_id: '', ultimo_envio_ms: '', pausado_ate_ms: '', pausas_seguidas: '0' } }));"
+   },
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    400,
+    0
+   ],
+   "id": "bfe2cf81-d2ed-4a64-9f02-82e4e2982d8b",
+   "name": "Parar filas"
+  },
+  {
+   "parameters": {
+    "operation": "update",
+    "dataTableId": {
+     "__rl": true,
+     "value": "AKvXsAZo4z5YlIEA",
+     "mode": "list",
+     "cachedResultName": "controle_bot",
+     "cachedResultUrl": "/projects/g7NSooy85ZuYWBNa/datatables/AKvXsAZo4z5YlIEA"
+    },
+    "filters": {
+     "conditions": [
+      {
+       "keyValue": "={{ $json.id }}"
+      }
+     ]
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "status": "={{ $json.status }}",
+      "lote_id": "={{ $json.lote_id }}",
+      "ultimo_envio_ms": "={{ $json.ultimo_envio_ms }}",
+      "pausado_ate_ms": "={{ $json.pausado_ate_ms }}",
+      "pausas_seguidas": "={{ $json.pausas_seguidas }}"
+     },
+     "matchingColumns": [],
+     "schema": [
+      {
+       "id": "concessionaria",
+       "displayName": "concessionaria",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "jid",
+       "displayName": "jid",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "numero",
+       "displayName": "numero",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "status",
+       "displayName": "status",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "msg_inicial",
+       "displayName": "msg_inicial",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "cpf",
+       "displayName": "cpf",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "nome",
+       "displayName": "nome",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "email",
+       "displayName": "email",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "celular",
+       "displayName": "celular",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "lote_id",
+       "displayName": "lote_id",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "ultimo_envio_ms",
+       "displayName": "ultimo_envio_ms",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "ultima_recebida_ms",
+       "displayName": "ultima_recebida_ms",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "pausado_ate_ms",
+       "displayName": "pausado_ate_ms",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "pausas_seguidas",
+       "displayName": "pausas_seguidas",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "pausa_loop_min",
+       "displayName": "pausa_loop_min",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      }
+     ],
+     "attemptToConvertTypes": false,
+     "convertFieldsToString": false
+    },
+    "options": {}
+   },
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    600,
+    0
+   ],
+   "id": "b095e9aa-16cf-4859-8e9a-b236f0151ca4",
+   "name": "Salvar controle"
+  },
+  {
+   "parameters": {
+    "jsCode": "const c = $('Controle').all().map(i => i.json).filter(x => x.id);\nreturn [{ json: c.map(x => ({ conc: x.concessionaria, cpf_tamanho: String(x.cpf || '').length,\n  cpf_so_digitos: /^\\d+$/.test(String(x.cpf || '')), cpf_tem_espaco: /\\s/.test(String(x.cpf || '')),\n  nome_ok: !!String(x.nome || '').trim(), email_ok: /@/.test(String(x.email || '')), celular_tamanho: String(x.celular || '').length })) }];"
+   },
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    400,
+    150
+   ],
+   "id": "957d1518-ba57-459e-ad48-8235a479224d",
+   "name": "Conferir dados"
+  }
+ ],
+ "connections": {
+  "Webhook": {
+   "main": [
+    [
+     {
+      "node": "Controle",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Controle": {
+   "main": [
+    [
+     {
+      "node": "Limpar CEEE",
+      "type": "main",
+      "index": 0
+     },
+     {
+      "node": "Parar filas",
+      "type": "main",
+      "index": 0
+     },
+     {
+      "node": "Conferir dados",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Limpar CEEE": {
+   "main": [
+    [
+     {
+      "node": "Limpar RGE",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Parar filas": {
+   "main": [
+    [
+     {
+      "node": "Salvar controle",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  }
+ }
+}
