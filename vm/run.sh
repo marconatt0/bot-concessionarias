@@ -1,18 +1,21 @@
 #!/bin/bash
-# passo 2: importa e publica os webhooks no n8n e testa pelo Caddy
+# passo 3: teste de ponta a ponta dos webhooks (com o bot-vigia desligado durante o teste)
 clear
-RAW="https://api.github.com/repos/marconatt0/bot-concessionarias/contents/vm"
-get() { curl -fsSL -H 'Accept: application/vnd.github.raw' "$RAW/$1?ref=main&t=$(date +%s)" -o "$2"; }
-mkdir -p /opt/bot-tunel/n8n && cd /opt/bot-tunel
-for w in bot-lote bot-resultado bot-arquivo bot-cancelar; do get n8n/$w.json n8n/$w.json || exit 1; done
-echo "== status atual das filas:"
-docker exec whatsapp-n8n-1 sh -c 'true'
-docker cp n8n/. whatsapp-n8n-1:/tmp/bot-webhooks/
-docker exec whatsapp-n8n-1 n8n import:workflow --separate --input=/tmp/bot-webhooks --projectId=g7NSooy85ZuYWBNa 2>&1 | tail -4
-for id in botWebhookLote01 botWebhookResul1 botWebhookArqui1 botWebhookCance1; do
-  docker exec whatsapp-n8n-1 n8n publish:workflow --id=$id 2>&1 | tail -1
-done
-sleep 3
+cd /opt/bot-tunel
 T=$(grep ^BOT_TOKEN= .env | cut -d= -f2)
-echo "== resultado com token:"; docker compose exec -T caddy wget -qSO- --header "X-Bot-Token: $T" http://localhost/webhook/bot-resultado 2>&1 | head -5
-echo; echo "== resultado sem token:"; docker compose exec -T caddy wget -qSO- http://localhost/webhook/bot-resultado 2>&1 | head -2
+req() { docker run --rm --network whatsapp_default curlimages/curl:8.10.1 -s -w ' [%{http_code}]' \
+  -H "X-Bot-Token: $T" -H 'Content-Type: application/json' "$@" | cut -c1-400; echo; }
+VID=$(docker exec whatsapp-n8n-1 n8n list:workflow 2>/dev/null | grep '|bot-vigia$' | cut -d'|' -f1)
+echo "== vigia $VID: $(docker exec whatsapp-n8n-1 n8n unpublish:workflow --id=$VID 2>&1 | tail -1)"
+docker pull -q curlimages/curl:8.10.1 >/dev/null
+B64=$(printf 'arquivo-de-teste' | base64)
+BODY='{"lote_id":"teste-1","enviado_por":"teste","arquivo_nome":"teste.xlsx","arquivo_b64":"'$B64'","linhas":[{"linha":5,"site":"TESTE1","concessionaria":"CEEE","uc_nova":"000000"},{"linha":6,"site":"TESTE2","concessionaria":"RGE","uc_nova":"111111"}]}'
+echo "== lote:";          req -X POST -d "$BODY" http://caddy/webhook/bot-lote
+echo "== lote de novo:";  req -X POST -d "$BODY" http://caddy/webhook/bot-lote
+echo "== resultado:";     req http://caddy/webhook/bot-resultado
+echo "== arquivo (esperado $B64):"; req http://caddy/webhook/bot-arquivo
+echo "== cancelar:";      req -X POST -d '{}' http://caddy/webhook/bot-cancelar
+echo "== resultado:";     req http://caddy/webhook/bot-resultado
+echo "== sem token:";     docker run --rm --network whatsapp_default curlimages/curl:8.10.1 -s -o /dev/null -w '%{http_code}\n' http://caddy/webhook/bot-resultado
+ls -la /opt/planilhas/lotes
+echo "== vigia: $(docker exec whatsapp-n8n-1 n8n publish:workflow --id=$VID 2>&1 | tail -1)"
