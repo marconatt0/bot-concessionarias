@@ -1,0 +1,224 @@
+{
+ "id": "botAjusteRegra01",
+ "name": "bot-ajuste-regra-250",
+ "active": false,
+ "settings": {
+  "executionOrder": "v1"
+ },
+ "pinData": {},
+ "nodes": [
+  {
+   "parameters": {},
+   "type": "n8n-nodes-base.manualTrigger",
+   "typeVersion": 1,
+   "position": [
+    0,
+    0
+   ],
+   "id": "7333ec26-b839-40c7-a53d-594ce82f1f92",
+   "name": "Rodar"
+  },
+  {
+   "parameters": {
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "value": "Wbmg2rgEHlUh6fTW",
+     "mode": "list",
+     "cachedResultName": "regras_conversa",
+     "cachedResultUrl": "/projects/g7NSooy85ZuYWBNa/datatables/Wbmg2rgEHlUh6fTW"
+    },
+    "returnAll": true
+   },
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    200,
+    0
+   ],
+   "id": "79277b28-e545-474b-811b-b8e5c74930f8",
+   "name": "Regras",
+   "executeOnce": true
+  },
+  {
+   "parameters": {
+    "jsCode": "const r = $input.all().map(i => i.json).find(x => x.id && x.concessionaria === 'CEEE' && String(x.ordem) === '250');\nif (!r) throw new Error('regra CEEE 250 não encontrada');\nreturn [{ json: { id: r.id, acao: 'ja_aberto_e_proxima', resposta: '', valor_planilha: 'protocolo já aberto',\n  observacao: 'chamado já existia e foi reforçado: anota e vai para a próxima UC' } }];"
+   },
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    400,
+    0
+   ],
+   "id": "585c53f3-7985-43fc-9300-f6f1bebe5ac8",
+   "name": "Regra 250"
+  },
+  {
+   "parameters": {
+    "operation": "update",
+    "dataTableId": {
+     "__rl": true,
+     "value": "Wbmg2rgEHlUh6fTW",
+     "mode": "list",
+     "cachedResultName": "regras_conversa",
+     "cachedResultUrl": "/projects/g7NSooy85ZuYWBNa/datatables/Wbmg2rgEHlUh6fTW"
+    },
+    "filters": {
+     "conditions": [
+      {
+       "keyValue": "={{ $json.id }}"
+      }
+     ]
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "acao": "={{ $json.acao }}",
+      "resposta": "={{ $json.resposta }}",
+      "valor_planilha": "={{ $json.valor_planilha }}",
+      "observacao": "={{ $json.observacao }}"
+     },
+     "matchingColumns": [],
+     "schema": [
+      {
+       "id": "concessionaria",
+       "displayName": "concessionaria",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "ordem",
+       "displayName": "ordem",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "gatilho",
+       "displayName": "gatilho",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "tipo",
+       "displayName": "tipo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "acao",
+       "displayName": "acao",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "resposta",
+       "displayName": "resposta",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "valor_planilha",
+       "displayName": "valor_planilha",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "ativo",
+       "displayName": "ativo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "observacao",
+       "displayName": "observacao",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      }
+     ],
+     "attemptToConvertTypes": false,
+     "convertFieldsToString": false
+    },
+    "options": {}
+   },
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    600,
+    0
+   ],
+   "id": "d91088e4-3daf-4212-b12a-b99d2a63bd1a",
+   "name": "Salvar regra"
+  }
+ ],
+ "connections": {
+  "Rodar": {
+   "main": [
+    [
+     {
+      "node": "Regras",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Regras": {
+   "main": [
+    [
+     {
+      "node": "Regra 250",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Regra 250": {
+   "main": [
+    [
+     {
+      "node": "Salvar regra",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  }
+ }
+}
