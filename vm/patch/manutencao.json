@@ -19,9 +19,9 @@
     0,
     0
    ],
-   "id": "65ac8c00-18d3-4270-bb5b-3716ad10807c",
+   "id": "d31be5af-8c09-4ca9-b474-f3b70da92b03",
    "name": "Webhook",
-   "webhookId": "9024a2bf-61aa-448c-953f-229a6a6673f9"
+   "webhookId": "56cfff76-d109-40c3-a95a-a0aaa1429613"
   },
   {
    "parameters": {
@@ -41,7 +41,7 @@
     200,
     0
    ],
-   "id": "2e9b078b-3eb6-4ead-a88d-07c33eac2b3c",
+   "id": "d164196b-b23d-4337-a04f-1efbd7f5b29a",
    "name": "Controle",
    "executeOnce": true,
    "alwaysOutputData": true
@@ -64,7 +64,7 @@
     400,
     0
    ],
-   "id": "928ef928-b36c-4d04-b1f2-269078970157",
+   "id": "7ca22421-4887-4334-b5d2-15ba001d94a8",
    "name": "Fila CEEE",
    "executeOnce": true,
    "alwaysOutputData": true
@@ -87,7 +87,7 @@
     600,
     0
    ],
-   "id": "5acbfb73-bd28-4d01-a6c3-9c5ad48a6ad4",
+   "id": "f227b134-7702-4c3b-abfd-bdedd9dd90d6",
    "name": "Fila RGE",
    "executeOnce": true,
    "alwaysOutputData": true
@@ -102,7 +102,7 @@
     800,
     0
    ],
-   "id": "e76f9f7c-891b-48c7-bf4c-a8c0b27c3724",
+   "id": "5d27712d-c5a5-462d-a33d-ffe0e1ac221c",
    "name": "Diagnóstico"
   },
   {
@@ -117,7 +117,7 @@
     1000,
     -200
    ],
-   "id": "ebfc289a-886f-4662-96d3-39e9cf0fe49d",
+   "id": "a0914a6e-2229-4f51-ab6c-04e724c9e3d4",
    "name": "Responder"
   },
   {
@@ -138,7 +138,7 @@
     1000,
     0
    ],
-   "id": "fd740978-b0c0-417d-8351-5fc99e4826f3",
+   "id": "987ad089-f438-45b3-b5f9-65a37b09e0ce",
    "name": "Regras",
    "executeOnce": true,
    "alwaysOutputData": true
@@ -153,7 +153,7 @@
     1200,
     0
    ],
-   "id": "005a0c1f-7ccb-41a9-b9e5-624c5d96602f",
+   "id": "4d5ec047-8885-40f0-982c-3ce87ed71dff",
    "name": "Regra 80"
   },
   {
@@ -283,7 +283,7 @@
     1400,
     0
    ],
-   "id": "c621311b-743a-4f06-a0c9-045dfe0fb347",
+   "id": "49a040ad-1482-4485-9982-187ff335f505",
    "name": "Salvar regra"
   },
   {
@@ -296,7 +296,7 @@
     1000,
     200
    ],
-   "id": "1b461bbf-d0c9-41ba-9aa0-4d0db3bb584e",
+   "id": "fb63a269-d2b8-4759-a949-522ad383e847",
    "name": "Finalizadas CEEE"
   },
   {
@@ -447,8 +447,172 @@
     1200,
     200
    ],
-   "id": "b5338223-47ee-482e-9db5-9ed4230a816b",
+   "id": "68803059-c876-4b4a-8ed7-189e98c372e7",
    "name": "Salvar linhas"
+  },
+  {
+   "parameters": {
+    "jsCode": "const agora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });\nreturn $('Fila RGE').all().map(i => i.json).filter(x => x.id && x.situacao === 'finalizada_sem_protocolo')\n  .map(x => ({ json: { id: x.id, situacao: 'ja_aberto', protocolo: 'protocolo já aberto', atualizado_em: agora } }));"
+   },
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    1000,
+    400
+   ],
+   "id": "11fbe773-09d9-4514-8927-7533e11ec29a",
+   "name": "Finalizadas RGE"
+  },
+  {
+   "parameters": {
+    "operation": "update",
+    "dataTableId": {
+     "__rl": true,
+     "value": "KItEV4M7mfBXuzS3",
+     "mode": "list",
+     "cachedResultName": "fila_rge",
+     "cachedResultUrl": "/projects/g7NSooy85ZuYWBNa/datatables/KItEV4M7mfBXuzS3"
+    },
+    "filters": {
+     "conditions": [
+      {
+       "keyValue": "={{ $json.id }}"
+      }
+     ]
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "situacao": "={{ $json.situacao }}",
+      "protocolo": "={{ $json.protocolo }}",
+      "atualizado_em": "={{ $json.atualizado_em }}"
+     },
+     "matchingColumns": [],
+     "schema": [
+      {
+       "id": "linha",
+       "displayName": "linha",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "site",
+       "displayName": "site",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "uc_nova",
+       "displayName": "uc_nova",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "situacao",
+       "displayName": "situacao",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "protocolo",
+       "displayName": "protocolo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "previsao",
+       "displayName": "previsao",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "ultimo_gatilho",
+       "displayName": "ultimo_gatilho",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "repeticoes",
+       "displayName": "repeticoes",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "msg_desconhecida",
+       "displayName": "msg_desconhecida",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "lote_id",
+       "displayName": "lote_id",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "atualizado_em",
+       "displayName": "atualizado_em",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      }
+     ],
+     "attemptToConvertTypes": false,
+     "convertFieldsToString": false
+    },
+    "options": {}
+   },
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    1200,
+    400
+   ],
+   "id": "c9650ee4-7e17-4188-b8a7-c5485a13d12f",
+   "name": "Salvar linhas RGE"
   }
  ],
  "connections": {
@@ -513,6 +677,11 @@
       "node": "Finalizadas CEEE",
       "type": "main",
       "index": 0
+     },
+     {
+      "node": "Finalizadas RGE",
+      "type": "main",
+      "index": 0
      }
     ]
    ]
@@ -544,6 +713,17 @@
     [
      {
       "node": "Salvar linhas",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Finalizadas RGE": {
+   "main": [
+    [
+     {
+      "node": "Salvar linhas RGE",
       "type": "main",
       "index": 0
      }

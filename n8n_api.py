@@ -30,7 +30,7 @@ SITUACOES = {
     "sem_resposta": "Sem resposta",
     "loop": "Travou (loop)",
     "uc_nao_encontrada": "UC não encontrada",
-    "finalizada_sem_protocolo": "Terminou sem protocolo",
+    "finalizada_sem_protocolo": "Já tinha chamado aberto",
     "interrompida": "Cancelada",
 }
 FINAIS = {"protocolo", "ja_aberto", "sem_resposta", "loop", "uc_nao_encontrada",

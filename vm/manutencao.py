@@ -56,7 +56,7 @@ return r ? [{ json: { id: r.id, valor_planilha: 'protocolo já aberto',
   observacao: 'fim da conversa: começa a próxima UC; sem protocolo novo = já existia chamado' } }] : [];"""
 
 FINALIZADAS = """const agora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-return $('Fila CEEE').all().map(i => i.json).filter(x => x.id && x.situacao === 'finalizada_sem_protocolo')
+return $('__FILA__').all().map(i => i.json).filter(x => x.id && x.situacao === 'finalizada_sem_protocolo')
   .map(x => ({ json: { id: x.id, situacao: 'ja_aberto', protocolo: 'protocolo já aberto', atualizado_em: agora } }));"""
 
 
@@ -70,8 +70,10 @@ def wf():
           {"respondWith": "json", "responseBody": "={{ JSON.stringify($json) }}", "options": {}}),
         get("Regras", "regras_conversa", [1000, 0]), code("Regra 80", REGRA80, [1200, 0]),
         upd("Salvar regra", "regras_conversa", RC, ["valor_planilha", "observacao"], [1400, 0]),
-        code("Finalizadas CEEE", FINALIZADAS, [1000, 200]),
+        code("Finalizadas CEEE", FINALIZADAS.replace("__FILA__", "Fila CEEE"), [1000, 200]),
         upd("Salvar linhas", "fila_ceee", FC, ["situacao", "protocolo", "atualizado_em"], [1200, 200]),
+        code("Finalizadas RGE", FINALIZADAS.replace("__FILA__", "Fila RGE"), [1000, 400]),
+        upd("Salvar linhas RGE", "fila_rge", FC, ["situacao", "protocolo", "atualizado_em"], [1200, 400]),
     ]
     C = {}
     def c(a, b):
@@ -79,7 +81,8 @@ def wf():
     for a, b in [("Webhook", "Controle"), ("Controle", "Fila CEEE"), ("Fila CEEE", "Fila RGE"),
                  ("Fila RGE", "Diagnóstico"), ("Diagnóstico", "Responder"), ("Diagnóstico", "Regras"),
                  ("Regras", "Regra 80"), ("Regra 80", "Salvar regra"), ("Diagnóstico", "Finalizadas CEEE"),
-                 ("Finalizadas CEEE", "Salvar linhas")]:
+                 ("Finalizadas CEEE", "Salvar linhas"), ("Diagnóstico", "Finalizadas RGE"),
+                 ("Finalizadas RGE", "Salvar linhas RGE")]:
         c(a, b)
     return {"id": "botManutencao001", "name": "bot-manutencao", "active": False,
             "settings": {"executionOrder": "v1"}, "pinData": {}, "nodes": nodes, "connections": C}
