@@ -1,0 +1,18 @@
+# Só deixa passar os 4 webhooks do robô, e só com o token certo.
+:80 {
+	@permitido {
+		path /webhook/bot-lote /webhook/bot-resultado /webhook/bot-arquivo /webhook/bot-cancelar
+		header X-Bot-Token {$BOT_TOKEN}
+	}
+	handle @permitido {
+		request_body {
+			max_size 20MB
+		}
+		reverse_proxy n8n:5678 {
+			header_up Host localhost:5678
+		}
+	}
+	handle {
+		respond 404
+	}
+}

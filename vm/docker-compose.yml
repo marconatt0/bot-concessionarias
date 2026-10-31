@@ -1,0 +1,25 @@
+# Stack separada da stack "whatsapp" do Portainer; entra na mesma rede para achar o n8n.
+# Uso (em /opt/bot-tunel, com o .env preenchido):  docker compose --profile tunel up -d
+name: bot-tunel
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      BOT_TOKEN: ${BOT_TOKEN:?defina BOT_TOKEN no .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    networks: [whatsapp]
+  ngrok:
+    image: ngrok/ngrok:latest
+    restart: unless-stopped
+    command: ["http", "caddy:80", "--url=https://${NGROK_DOMAIN}"]
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
+    depends_on: [caddy]
+    networks: [whatsapp]
+    profiles: [tunel]
+networks:
+  whatsapp:
+    external: true
+    name: whatsapp_default

@@ -1,0 +1,889 @@
+{
+ "id": "botWebhookCance1",
+ "name": "bot-cancelar",
+ "nodes": [
+  {
+   "parameters": {
+    "path": "bot-cancelar",
+    "responseMode": "responseNode",
+    "options": {},
+    "httpMethod": "POST"
+   },
+   "type": "n8n-nodes-base.webhook",
+   "typeVersion": 2,
+   "position": [
+    -1000,
+    0
+   ],
+   "id": "6a8ebd3e-216d-4d09-8c4b-fdfe15b2a869",
+   "name": "Webhook",
+   "webhookId": "eb4d43e1-1efe-46fa-96d9-245487ee65fb"
+  },
+  {
+   "parameters": {
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "value": "AKvXsAZo4z5YlIEA",
+     "mode": "list",
+     "cachedResultName": "controle_bot",
+     "cachedResultUrl": "/projects/g7NSooy85ZuYWBNa/datatables/AKvXsAZo4z5YlIEA"
+    },
+    "returnAll": true
+   },
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    -800,
+    0
+   ],
+   "id": "7780414d-68ed-46b3-a7f6-607417924464",
+   "name": "Controle",
+   "executeOnce": true,
+   "alwaysOutputData": true
+  },
+  {
+   "parameters": {
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "value": "mSPz4dkef1EPuy0Q",
+     "mode": "list",
+     "cachedResultName": "fila_ceee",
+     "cachedResultUrl": "/projects/g7NSooy85ZuYWBNa/datatables/mSPz4dkef1EPuy0Q"
+    },
+    "returnAll": true
+   },
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    -600,
+    0
+   ],
+   "id": "d577611e-f7e2-4b20-bfc2-c82c0c70e1c6",
+   "name": "Fila CEEE",
+   "executeOnce": true,
+   "alwaysOutputData": true
+  },
+  {
+   "parameters": {
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "value": "KItEV4M7mfBXuzS3",
+     "mode": "list",
+     "cachedResultName": "fila_rge",
+     "cachedResultUrl": "/projects/g7NSooy85ZuYWBNa/datatables/KItEV4M7mfBXuzS3"
+    },
+    "returnAll": true
+   },
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    -400,
+    0
+   ],
+   "id": "3ce9710c-d66b-487c-9424-1434164b4e2c",
+   "name": "Fila RGE",
+   "executeOnce": true,
+   "alwaysOutputData": true
+  },
+  {
+   "parameters": {
+    "operation": "read",
+    "fileSelector": "/files/lotes/atual.json",
+    "options": {}
+   },
+   "type": "n8n-nodes-base.readWriteFile",
+   "typeVersion": 1,
+   "position": [
+    -200,
+    0
+   ],
+   "id": "b400bc11-6f4d-4446-96f6-90e229a4241a",
+   "name": "Ler metadados",
+   "executeOnce": true,
+   "alwaysOutputData": true,
+   "onError": "continueRegularOutput"
+  },
+  {
+   "parameters": {
+    "operation": "binaryToPropery",
+    "binaryPropertyName": "data",
+    "destinationKey": "data",
+    "options": {}
+   },
+   "type": "n8n-nodes-base.extractFromFile",
+   "typeVersion": 1,
+   "position": [
+    0,
+    0
+   ],
+   "id": "b0d6d3ee-93d1-4462-9097-ebb14c7a72e5",
+   "name": "Metadados em texto",
+   "executeOnce": true,
+   "alwaysOutputData": true,
+   "onError": "continueRegularOutput"
+  },
+  {
+   "parameters": {
+    "jsCode": "let meta = null;\nconst b64 = $input.first().json.data;\nif (b64) { try { meta = JSON.parse(Buffer.from(b64, 'base64').toString('utf8')); } catch (e) {} }\nreturn [{ json: { meta } }];"
+   },
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    200,
+    0
+   ],
+   "id": "b489edc9-29fc-4a1a-9e11-dbdc0e3497a6",
+   "name": "Lote atual"
+  },
+  {
+   "parameters": {
+    "jsCode": "const ATIVOS = ['rodando', 'pausado', 'aguardando_expiracao'];\nconst agora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });\nconst FILAS = [['CEEE', 'Fila CEEE'], ['RGE', 'Fila RGE']];\nconst meta = $('Lote atual').first().json.meta;\nconst plano = { meta: null, CEEE: [], RGE: [], controle: [] };\nif (meta && meta.lote_id) {\n  plano.meta = { ...meta, cancelado: true, cancelado_em: agora };\n  for (const [conc, no] of FILAS) {\n    for (const r of $(no).all().map(i => i.json).filter(r => r.id && r.lote_id === meta.lote_id)) {\n      const s = String(r.situacao || '');\n      let nova = null;\n      if (s.startsWith('aguardando_fim:')) nova = s.slice('aguardando_fim:'.length);\n      else if (s === 'em_andamento') nova = 'interrompida';\n      if (nova) plano[conc].push({ id: r.id, situacao: nova, atualizado_em: agora });\n    }\n  }\n  plano.controle = $('Controle').all().map(i => i.json)\n    .filter(r => r.id && ATIVOS.includes(r.status))\n    .map(r => ({ id: r.id, status: 'cancelado', pausado_ate_ms: '' }));\n}\nreturn [{ json: { plano, resposta: { ok: true } } }];"
+   },
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    400,
+    0
+   ],
+   "id": "657f2750-025c-4021-8f1c-642345d35de3",
+   "name": "Plano"
+  },
+  {
+   "parameters": {
+    "jsCode": "return $json.plano.CEEE.map(r => ({ json: r }));"
+   },
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    650,
+    -450
+   ],
+   "id": "41e9dcd4-7833-4c85-9c02-3db598c06383",
+   "name": "Linhas CEEE"
+  },
+  {
+   "parameters": {
+    "operation": "update",
+    "dataTableId": {
+     "__rl": true,
+     "value": "mSPz4dkef1EPuy0Q",
+     "mode": "list",
+     "cachedResultName": "fila_ceee",
+     "cachedResultUrl": "/projects/g7NSooy85ZuYWBNa/datatables/mSPz4dkef1EPuy0Q"
+    },
+    "filters": {
+     "conditions": [
+      {
+       "keyValue": "={{ $json.id }}"
+      }
+     ]
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "situacao": "={{ $json.situacao }}",
+      "atualizado_em": "={{ $json.atualizado_em }}"
+     },
+     "matchingColumns": [],
+     "schema": [
+      {
+       "id": "linha",
+       "displayName": "linha",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "site",
+       "displayName": "site",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "uc_nova",
+       "displayName": "uc_nova",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "situacao",
+       "displayName": "situacao",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "protocolo",
+       "displayName": "protocolo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "previsao",
+       "displayName": "previsao",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "ultimo_gatilho",
+       "displayName": "ultimo_gatilho",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "repeticoes",
+       "displayName": "repeticoes",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "msg_desconhecida",
+       "displayName": "msg_desconhecida",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "lote_id",
+       "displayName": "lote_id",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "atualizado_em",
+       "displayName": "atualizado_em",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      }
+     ],
+     "attemptToConvertTypes": false,
+     "convertFieldsToString": false
+    },
+    "options": {}
+   },
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    900,
+    -450
+   ],
+   "id": "5d1c177b-38b0-44f5-a74e-4f1d07f72681",
+   "name": "Atualizar CEEE"
+  },
+  {
+   "parameters": {
+    "jsCode": "return $json.plano.RGE.map(r => ({ json: r }));"
+   },
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    650,
+    -300
+   ],
+   "id": "3371346b-9f18-49a9-9039-1af8081d750f",
+   "name": "Linhas RGE"
+  },
+  {
+   "parameters": {
+    "operation": "update",
+    "dataTableId": {
+     "__rl": true,
+     "value": "KItEV4M7mfBXuzS3",
+     "mode": "list",
+     "cachedResultName": "fila_rge",
+     "cachedResultUrl": "/projects/g7NSooy85ZuYWBNa/datatables/KItEV4M7mfBXuzS3"
+    },
+    "filters": {
+     "conditions": [
+      {
+       "keyValue": "={{ $json.id }}"
+      }
+     ]
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "situacao": "={{ $json.situacao }}",
+      "atualizado_em": "={{ $json.atualizado_em }}"
+     },
+     "matchingColumns": [],
+     "schema": [
+      {
+       "id": "linha",
+       "displayName": "linha",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "site",
+       "displayName": "site",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "uc_nova",
+       "displayName": "uc_nova",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "situacao",
+       "displayName": "situacao",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "protocolo",
+       "displayName": "protocolo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "previsao",
+       "displayName": "previsao",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "ultimo_gatilho",
+       "displayName": "ultimo_gatilho",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "repeticoes",
+       "displayName": "repeticoes",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "msg_desconhecida",
+       "displayName": "msg_desconhecida",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "lote_id",
+       "displayName": "lote_id",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "atualizado_em",
+       "displayName": "atualizado_em",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      }
+     ],
+     "attemptToConvertTypes": false,
+     "convertFieldsToString": false
+    },
+    "options": {}
+   },
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    900,
+    -300
+   ],
+   "id": "d25b0276-7dce-4afe-b9c4-fcd84a1415dd",
+   "name": "Atualizar RGE"
+  },
+  {
+   "parameters": {
+    "jsCode": "return $json.plano.controle.map(r => ({ json: r }));"
+   },
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    650,
+    -150
+   ],
+   "id": "79b1a783-e978-4994-905a-7b48db998463",
+   "name": "Filas a parar"
+  },
+  {
+   "parameters": {
+    "operation": "update",
+    "dataTableId": {
+     "__rl": true,
+     "value": "AKvXsAZo4z5YlIEA",
+     "mode": "list",
+     "cachedResultName": "controle_bot",
+     "cachedResultUrl": "/projects/g7NSooy85ZuYWBNa/datatables/AKvXsAZo4z5YlIEA"
+    },
+    "filters": {
+     "conditions": [
+      {
+       "keyValue": "={{ $json.id }}"
+      }
+     ]
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "status": "={{ $json.status }}",
+      "pausado_ate_ms": "={{ $json.pausado_ate_ms }}"
+     },
+     "matchingColumns": [],
+     "schema": [
+      {
+       "id": "concessionaria",
+       "displayName": "concessionaria",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "jid",
+       "displayName": "jid",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "numero",
+       "displayName": "numero",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "status",
+       "displayName": "status",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "msg_inicial",
+       "displayName": "msg_inicial",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "cpf",
+       "displayName": "cpf",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "nome",
+       "displayName": "nome",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "email",
+       "displayName": "email",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "celular",
+       "displayName": "celular",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "lote_id",
+       "displayName": "lote_id",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "ultimo_envio_ms",
+       "displayName": "ultimo_envio_ms",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "ultima_recebida_ms",
+       "displayName": "ultima_recebida_ms",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "pausado_ate_ms",
+       "displayName": "pausado_ate_ms",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "pausas_seguidas",
+       "displayName": "pausas_seguidas",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "pausa_loop_min",
+       "displayName": "pausa_loop_min",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      }
+     ],
+     "attemptToConvertTypes": false,
+     "convertFieldsToString": false
+    },
+    "options": {}
+   },
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    900,
+    -150
+   ],
+   "id": "3930313d-e835-4cf5-b942-9e7695331fe4",
+   "name": "Parar filas"
+  },
+  {
+   "parameters": {
+    "jsCode": "if (!$json.plano.meta) return [];\nreturn [{ json: {}, binary: { data: { data: Buffer.from(JSON.stringify($json.plano.meta)).toString('base64'), mimeType: 'application/json', fileName: 'atual.json' } } }];"
+   },
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    650,
+    0
+   ],
+   "id": "45c9ab6d-2db6-4844-a444-ec2d3b37c320",
+   "name": "Metadados"
+  },
+  {
+   "parameters": {
+    "operation": "write",
+    "fileName": "/files/lotes/atual.json",
+    "dataPropertyName": "data",
+    "options": {}
+   },
+   "type": "n8n-nodes-base.readWriteFile",
+   "typeVersion": 1,
+   "position": [
+    900,
+    0
+   ],
+   "id": "cb48c690-1637-4c5e-9d47-5851aa189ff9",
+   "name": "Gravar metadados"
+  },
+  {
+   "parameters": {
+    "respondWith": "json",
+    "responseBody": "={{ JSON.stringify($json.resposta) }}",
+    "options": {
+     "responseCode": "={{ $json.codigo || 200 }}"
+    }
+   },
+   "type": "n8n-nodes-base.respondToWebhook",
+   "typeVersion": 1.1,
+   "position": [
+    650,
+    200
+   ],
+   "id": "adadcc15-905d-4214-813e-3083fbb37288",
+   "name": "Responder"
+  }
+ ],
+ "connections": {
+  "Webhook": {
+   "main": [
+    [
+     {
+      "node": "Controle",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Controle": {
+   "main": [
+    [
+     {
+      "node": "Fila CEEE",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Fila CEEE": {
+   "main": [
+    [
+     {
+      "node": "Fila RGE",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Fila RGE": {
+   "main": [
+    [
+     {
+      "node": "Ler metadados",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Ler metadados": {
+   "main": [
+    [
+     {
+      "node": "Metadados em texto",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Metadados em texto": {
+   "main": [
+    [
+     {
+      "node": "Lote atual",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Lote atual": {
+   "main": [
+    [
+     {
+      "node": "Plano",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Plano": {
+   "main": [
+    [
+     {
+      "node": "Linhas CEEE",
+      "type": "main",
+      "index": 0
+     },
+     {
+      "node": "Linhas RGE",
+      "type": "main",
+      "index": 0
+     },
+     {
+      "node": "Filas a parar",
+      "type": "main",
+      "index": 0
+     },
+     {
+      "node": "Metadados",
+      "type": "main",
+      "index": 0
+     },
+     {
+      "node": "Responder",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Linhas CEEE": {
+   "main": [
+    [
+     {
+      "node": "Atualizar CEEE",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Linhas RGE": {
+   "main": [
+    [
+     {
+      "node": "Atualizar RGE",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Filas a parar": {
+   "main": [
+    [
+     {
+      "node": "Parar filas",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Metadados": {
+   "main": [
+    [
+     {
+      "node": "Gravar metadados",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  }
+ },
+ "active": false,
+ "settings": {
+  "executionOrder": "v1"
+ },
+ "pinData": {}
+}

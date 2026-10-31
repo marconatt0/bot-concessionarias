@@ -1,0 +1,223 @@
+{
+ "id": "botWebhookArqui1",
+ "name": "bot-arquivo",
+ "nodes": [
+  {
+   "parameters": {
+    "path": "bot-arquivo",
+    "responseMode": "responseNode",
+    "options": {}
+   },
+   "type": "n8n-nodes-base.webhook",
+   "typeVersion": 2,
+   "position": [
+    -800,
+    0
+   ],
+   "id": "5ee44e62-dc9f-43d0-b879-413676ffaf78",
+   "name": "Webhook",
+   "webhookId": "536ff21d-0ce6-4ba7-a823-ba8204977702"
+  },
+  {
+   "parameters": {
+    "operation": "read",
+    "fileSelector": "/files/lotes/atual.json",
+    "options": {}
+   },
+   "type": "n8n-nodes-base.readWriteFile",
+   "typeVersion": 1,
+   "position": [
+    -600,
+    0
+   ],
+   "id": "d395d349-c6a8-4ac4-bfb5-3605f423133b",
+   "name": "Ler metadados",
+   "executeOnce": true,
+   "alwaysOutputData": true,
+   "onError": "continueRegularOutput"
+  },
+  {
+   "parameters": {
+    "operation": "binaryToPropery",
+    "binaryPropertyName": "data",
+    "destinationKey": "data",
+    "options": {}
+   },
+   "type": "n8n-nodes-base.extractFromFile",
+   "typeVersion": 1,
+   "position": [
+    -400,
+    0
+   ],
+   "id": "efbde715-3f2f-4fbc-a67c-81bfcb97232f",
+   "name": "Metadados em texto",
+   "executeOnce": true,
+   "alwaysOutputData": true,
+   "onError": "continueRegularOutput"
+  },
+  {
+   "parameters": {
+    "jsCode": "let meta = null;\nconst b64 = $input.first().json.data;\nif (b64) { try { meta = JSON.parse(Buffer.from(b64, 'base64').toString('utf8')); } catch (e) {} }\nreturn [{ json: { meta } }];"
+   },
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    -200,
+    0
+   ],
+   "id": "9d783d2a-0d1c-4259-946a-cf008a25535a",
+   "name": "Lote atual"
+  },
+  {
+   "parameters": {
+    "operation": "read",
+    "fileSelector": "/files/lotes/atual.xlsx",
+    "options": {}
+   },
+   "type": "n8n-nodes-base.readWriteFile",
+   "typeVersion": 1,
+   "position": [
+    0,
+    0
+   ],
+   "id": "0df63b24-082b-4a52-b2f0-1dbae232d0f4",
+   "name": "Ler planilha",
+   "executeOnce": true,
+   "alwaysOutputData": true,
+   "onError": "continueRegularOutput"
+  },
+  {
+   "parameters": {
+    "operation": "binaryToPropery",
+    "binaryPropertyName": "data",
+    "destinationKey": "data",
+    "options": {}
+   },
+   "type": "n8n-nodes-base.extractFromFile",
+   "typeVersion": 1,
+   "position": [
+    200,
+    0
+   ],
+   "id": "56ce3bfb-c41e-49ac-bfb4-5e4347367ea7",
+   "name": "Planilha em base64",
+   "executeOnce": true,
+   "alwaysOutputData": true,
+   "onError": "continueRegularOutput"
+  },
+  {
+   "parameters": {
+    "jsCode": "const meta = $('Lote atual').first().json.meta;\nconst b64 = $input.first().json.data;\nif (!meta || !b64) return [{ json: { resposta: { lote_id: meta?.lote_id || '', arquivo_nome: '', arquivo_b64: '' } } }];\nreturn [{ json: { resposta: { lote_id: meta.lote_id, arquivo_nome: meta.arquivo_nome, arquivo_b64: b64 } } }];"
+   },
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    400,
+    0
+   ],
+   "id": "61cabb19-eb4c-442e-96fc-c67ee5a0341f",
+   "name": "Montar resposta"
+  },
+  {
+   "parameters": {
+    "respondWith": "json",
+    "responseBody": "={{ JSON.stringify($json.resposta) }}",
+    "options": {
+     "responseCode": "={{ $json.codigo || 200 }}"
+    }
+   },
+   "type": "n8n-nodes-base.respondToWebhook",
+   "typeVersion": 1.1,
+   "position": [
+    600,
+    0
+   ],
+   "id": "7d57fd0c-e758-4dd3-9352-29426d2d0ed7",
+   "name": "Responder"
+  }
+ ],
+ "connections": {
+  "Webhook": {
+   "main": [
+    [
+     {
+      "node": "Ler metadados",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Ler metadados": {
+   "main": [
+    [
+     {
+      "node": "Metadados em texto",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Metadados em texto": {
+   "main": [
+    [
+     {
+      "node": "Lote atual",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Lote atual": {
+   "main": [
+    [
+     {
+      "node": "Ler planilha",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Ler planilha": {
+   "main": [
+    [
+     {
+      "node": "Planilha em base64",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Planilha em base64": {
+   "main": [
+    [
+     {
+      "node": "Montar resposta",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Montar resposta": {
+   "main": [
+    [
+     {
+      "node": "Responder",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  }
+ },
+ "active": false,
+ "settings": {
+  "executionOrder": "v1"
+ },
+ "pinData": {}
+}

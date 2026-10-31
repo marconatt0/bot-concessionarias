@@ -1,0 +1,882 @@
+{
+ "id": "botWebhookLote01",
+ "name": "bot-lote",
+ "nodes": [
+  {
+   "parameters": {
+    "path": "bot-lote",
+    "responseMode": "responseNode",
+    "options": {},
+    "httpMethod": "POST"
+   },
+   "type": "n8n-nodes-base.webhook",
+   "typeVersion": 2,
+   "position": [
+    -800,
+    0
+   ],
+   "id": "c4074dbf-6d9b-4e81-9967-7efd4147e8fb",
+   "name": "Webhook",
+   "webhookId": "c4b92bfd-4527-47bb-bc22-778c4767bc12"
+  },
+  {
+   "parameters": {
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "value": "AKvXsAZo4z5YlIEA",
+     "mode": "list",
+     "cachedResultName": "controle_bot",
+     "cachedResultUrl": "/projects/g7NSooy85ZuYWBNa/datatables/AKvXsAZo4z5YlIEA"
+    },
+    "returnAll": true
+   },
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    -600,
+    0
+   ],
+   "id": "f70e59bb-91ef-4f65-9fb3-da812ca000d0",
+   "name": "Controle",
+   "executeOnce": true,
+   "alwaysOutputData": true
+  },
+  {
+   "parameters": {
+    "jsCode": "const ATIVOS = ['rodando', 'pausado', 'aguardando_expiracao'];\nconst agora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });\nconst body = $('Webhook').first().json.body || {};\nconst ctrl = $('Controle').all().map(i => i.json).filter(r => r.id);\nconst ocupada = ctrl.find(r => ATIVOS.includes(r.status));\nconst linhas = (Array.isArray(body.linhas) ? body.linhas : [])\n  .filter(l => ['CEEE', 'RGE'].includes(l.concessionaria) && String(l.uc_nova || '').trim());\nlet erro = '', codigo = 200;\nif (ocupada) { erro = `Já existe um lote em andamento (fila ${ocupada.concessionaria}: ${ocupada.status}).`; codigo = 409; }\nelse if (!body.lote_id || !linhas.length) { erro = 'Pedido sem lote_id ou sem linhas de CEEE/RGE.'; codigo = 400; }\nelse if (!body.arquivo_b64) { erro = 'Pedido sem o arquivo da planilha.'; codigo = 400; }\nconst lote_id = String(body.lote_id || '');\nreturn [{ json: {\n  ok: !erro, codigo,\n  resposta: erro ? { ok: false, erro } : { ok: true, lote_id, linhas: linhas.length },\n  lote_id, linhas,\n  meta: { lote_id, arquivo_nome: String(body.arquivo_nome || 'planilha.xlsx'),\n          enviado_por: String(body.enviado_por || ''), enviado_em: agora, cancelado: false },\n} }];"
+   },
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    -400,
+    0
+   ],
+   "id": "662be5ae-ac36-4135-a745-5aa99f64ec31",
+   "name": "Validar"
+  },
+  {
+   "parameters": {
+    "jsCode": "return $json.ok ? $input.all() : [];"
+   },
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    -200,
+    -200
+   ],
+   "id": "f6432f69-26f8-4612-a68f-36eaca3c038a",
+   "name": "Se ok"
+  },
+  {
+   "parameters": {
+    "resource": "table",
+    "operation": "clear",
+    "dataTableId": {
+     "__rl": true,
+     "value": "mSPz4dkef1EPuy0Q",
+     "mode": "list",
+     "cachedResultName": "fila_ceee",
+     "cachedResultUrl": "/projects/g7NSooy85ZuYWBNa/datatables/mSPz4dkef1EPuy0Q"
+    }
+   },
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    0,
+    -200
+   ],
+   "id": "45e93eda-49a3-48b5-99f8-36dedfb4fb5f",
+   "name": "Limpar fila CEEE",
+   "executeOnce": true,
+   "alwaysOutputData": true
+  },
+  {
+   "parameters": {
+    "resource": "table",
+    "operation": "clear",
+    "dataTableId": {
+     "__rl": true,
+     "value": "KItEV4M7mfBXuzS3",
+     "mode": "list",
+     "cachedResultName": "fila_rge",
+     "cachedResultUrl": "/projects/g7NSooy85ZuYWBNa/datatables/KItEV4M7mfBXuzS3"
+    }
+   },
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    200,
+    -200
+   ],
+   "id": "8cfd46e0-a24e-479d-83c8-0b31b8b0926f",
+   "name": "Limpar fila RGE",
+   "executeOnce": true,
+   "alwaysOutputData": true
+  },
+  {
+   "parameters": {
+    "jsCode": "const agora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });\nconst v = $('Validar').first().json;\nreturn v.linhas.filter(l => l.concessionaria === 'CEEE').map(l => ({ json: {\n  linha: String(l.linha ?? ''), site: String(l.site ?? ''), uc_nova: String(l.uc_nova ?? '').trim(),\n  situacao: 'pendente', protocolo: '', previsao: '', ultimo_gatilho: '', repeticoes: '0',\n  msg_desconhecida: '', lote_id: v.lote_id, atualizado_em: agora,\n} }));"
+   },
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    450,
+    -500
+   ],
+   "id": "e70f59ea-a4bc-4365-9ef0-af17287ed0bf",
+   "name": "Linhas CEEE"
+  },
+  {
+   "parameters": {
+    "operation": "insert",
+    "dataTableId": {
+     "__rl": true,
+     "value": "mSPz4dkef1EPuy0Q",
+     "mode": "list",
+     "cachedResultName": "fila_ceee",
+     "cachedResultUrl": "/projects/g7NSooy85ZuYWBNa/datatables/mSPz4dkef1EPuy0Q"
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "linha": "={{ $json.linha }}",
+      "site": "={{ $json.site }}",
+      "uc_nova": "={{ $json.uc_nova }}",
+      "situacao": "={{ $json.situacao }}",
+      "protocolo": "={{ $json.protocolo }}",
+      "previsao": "={{ $json.previsao }}",
+      "ultimo_gatilho": "={{ $json.ultimo_gatilho }}",
+      "repeticoes": "={{ $json.repeticoes }}",
+      "msg_desconhecida": "={{ $json.msg_desconhecida }}",
+      "lote_id": "={{ $json.lote_id }}",
+      "atualizado_em": "={{ $json.atualizado_em }}"
+     },
+     "matchingColumns": [],
+     "schema": [
+      {
+       "id": "linha",
+       "displayName": "linha",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "site",
+       "displayName": "site",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "uc_nova",
+       "displayName": "uc_nova",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "situacao",
+       "displayName": "situacao",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "protocolo",
+       "displayName": "protocolo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "previsao",
+       "displayName": "previsao",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "ultimo_gatilho",
+       "displayName": "ultimo_gatilho",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "repeticoes",
+       "displayName": "repeticoes",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "msg_desconhecida",
+       "displayName": "msg_desconhecida",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "lote_id",
+       "displayName": "lote_id",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "atualizado_em",
+       "displayName": "atualizado_em",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      }
+     ],
+     "attemptToConvertTypes": false,
+     "convertFieldsToString": false
+    },
+    "options": {}
+   },
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    700,
+    -500
+   ],
+   "id": "a6e2383e-5326-4f70-9465-20d1aa060616",
+   "name": "Inserir CEEE"
+  },
+  {
+   "parameters": {
+    "jsCode": "const agora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });\nconst v = $('Validar').first().json;\nreturn v.linhas.filter(l => l.concessionaria === 'RGE').map(l => ({ json: {\n  linha: String(l.linha ?? ''), site: String(l.site ?? ''), uc_nova: String(l.uc_nova ?? '').trim(),\n  situacao: 'pendente', protocolo: '', previsao: '', ultimo_gatilho: '', repeticoes: '0',\n  msg_desconhecida: '', lote_id: v.lote_id, atualizado_em: agora,\n} }));"
+   },
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    450,
+    -350
+   ],
+   "id": "281ec208-119e-4773-97b9-9ef57c49999f",
+   "name": "Linhas RGE"
+  },
+  {
+   "parameters": {
+    "operation": "insert",
+    "dataTableId": {
+     "__rl": true,
+     "value": "KItEV4M7mfBXuzS3",
+     "mode": "list",
+     "cachedResultName": "fila_rge",
+     "cachedResultUrl": "/projects/g7NSooy85ZuYWBNa/datatables/KItEV4M7mfBXuzS3"
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "linha": "={{ $json.linha }}",
+      "site": "={{ $json.site }}",
+      "uc_nova": "={{ $json.uc_nova }}",
+      "situacao": "={{ $json.situacao }}",
+      "protocolo": "={{ $json.protocolo }}",
+      "previsao": "={{ $json.previsao }}",
+      "ultimo_gatilho": "={{ $json.ultimo_gatilho }}",
+      "repeticoes": "={{ $json.repeticoes }}",
+      "msg_desconhecida": "={{ $json.msg_desconhecida }}",
+      "lote_id": "={{ $json.lote_id }}",
+      "atualizado_em": "={{ $json.atualizado_em }}"
+     },
+     "matchingColumns": [],
+     "schema": [
+      {
+       "id": "linha",
+       "displayName": "linha",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "site",
+       "displayName": "site",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "uc_nova",
+       "displayName": "uc_nova",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "situacao",
+       "displayName": "situacao",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "protocolo",
+       "displayName": "protocolo",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "previsao",
+       "displayName": "previsao",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "ultimo_gatilho",
+       "displayName": "ultimo_gatilho",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "repeticoes",
+       "displayName": "repeticoes",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "msg_desconhecida",
+       "displayName": "msg_desconhecida",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "lote_id",
+       "displayName": "lote_id",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "atualizado_em",
+       "displayName": "atualizado_em",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      }
+     ],
+     "attemptToConvertTypes": false,
+     "convertFieldsToString": false
+    },
+    "options": {}
+   },
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    700,
+    -350
+   ],
+   "id": "f8ebfb31-9573-4e15-a6a9-6654ff75bc88",
+   "name": "Inserir RGE"
+  },
+  {
+   "parameters": {
+    "jsCode": "return [{ json: {}, binary: { data: { data: $('Webhook').first().json.body.arquivo_b64, mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', fileName: 'atual.xlsx' } } }];"
+   },
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    450,
+    -200
+   ],
+   "id": "1cb95d68-0727-43f0-b5bc-60fd995883d5",
+   "name": "Arquivo"
+  },
+  {
+   "parameters": {
+    "operation": "write",
+    "fileName": "/files/lotes/atual.xlsx",
+    "dataPropertyName": "data",
+    "options": {}
+   },
+   "type": "n8n-nodes-base.readWriteFile",
+   "typeVersion": 1,
+   "position": [
+    700,
+    -200
+   ],
+   "id": "a31a3916-a429-4a92-b651-322b0d835d3c",
+   "name": "Gravar planilha"
+  },
+  {
+   "parameters": {
+    "jsCode": "return [{ json: {}, binary: { data: { data: Buffer.from(JSON.stringify($('Validar').first().json.meta)).toString('base64'), mimeType: 'application/json', fileName: 'atual.json' } } }];"
+   },
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    450,
+    -50
+   ],
+   "id": "107240a7-92d1-49aa-9aff-0d0150c0a835",
+   "name": "Metadados"
+  },
+  {
+   "parameters": {
+    "operation": "write",
+    "fileName": "/files/lotes/atual.json",
+    "dataPropertyName": "data",
+    "options": {}
+   },
+   "type": "n8n-nodes-base.readWriteFile",
+   "typeVersion": 1,
+   "position": [
+    700,
+    -50
+   ],
+   "id": "40314ca8-1935-49be-b1f9-3c073c1d9cce",
+   "name": "Gravar metadados"
+  },
+  {
+   "parameters": {
+    "jsCode": "const v = $('Validar').first().json;\nreturn $('Controle').all().map(i => i.json)\n  .filter(r => r.id && ['CEEE', 'RGE'].includes(r.concessionaria))\n  .map(r => ({ json: {\n    id: r.id, lote_id: v.lote_id, pausado_ate_ms: '', pausas_seguidas: '0', ultimo_envio_ms: '',\n    status: v.linhas.some(l => l.concessionaria === r.concessionaria) ? 'rodando' : 'concluido',\n  } }));"
+   },
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    450,
+    100
+   ],
+   "id": "e735048a-72bf-4731-b086-e7849bb05efe",
+   "name": "Ligar filas"
+  },
+  {
+   "parameters": {
+    "operation": "update",
+    "dataTableId": {
+     "__rl": true,
+     "value": "AKvXsAZo4z5YlIEA",
+     "mode": "list",
+     "cachedResultName": "controle_bot",
+     "cachedResultUrl": "/projects/g7NSooy85ZuYWBNa/datatables/AKvXsAZo4z5YlIEA"
+    },
+    "filters": {
+     "conditions": [
+      {
+       "keyValue": "={{ $json.id }}"
+      }
+     ]
+    },
+    "columns": {
+     "mappingMode": "defineBelow",
+     "value": {
+      "lote_id": "={{ $json.lote_id }}",
+      "status": "={{ $json.status }}",
+      "pausado_ate_ms": "={{ $json.pausado_ate_ms }}",
+      "pausas_seguidas": "={{ $json.pausas_seguidas }}",
+      "ultimo_envio_ms": "={{ $json.ultimo_envio_ms }}"
+     },
+     "matchingColumns": [],
+     "schema": [
+      {
+       "id": "concessionaria",
+       "displayName": "concessionaria",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "jid",
+       "displayName": "jid",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "numero",
+       "displayName": "numero",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "status",
+       "displayName": "status",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "msg_inicial",
+       "displayName": "msg_inicial",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "cpf",
+       "displayName": "cpf",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "nome",
+       "displayName": "nome",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "email",
+       "displayName": "email",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "celular",
+       "displayName": "celular",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "lote_id",
+       "displayName": "lote_id",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "ultimo_envio_ms",
+       "displayName": "ultimo_envio_ms",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "ultima_recebida_ms",
+       "displayName": "ultima_recebida_ms",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "pausado_ate_ms",
+       "displayName": "pausado_ate_ms",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "pausas_seguidas",
+       "displayName": "pausas_seguidas",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      },
+      {
+       "id": "pausa_loop_min",
+       "displayName": "pausa_loop_min",
+       "required": false,
+       "defaultMatch": false,
+       "display": true,
+       "type": "string",
+       "readOnly": false,
+       "removed": false
+      }
+     ],
+     "attemptToConvertTypes": false,
+     "convertFieldsToString": false
+    },
+    "options": {}
+   },
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    700,
+    100
+   ],
+   "id": "d1ddfefc-3d25-46b9-a07b-470077ca4635",
+   "name": "Salvar controle"
+  },
+  {
+   "parameters": {
+    "respondWith": "json",
+    "responseBody": "={{ JSON.stringify($json.resposta) }}",
+    "options": {
+     "responseCode": "={{ $json.codigo || 200 }}"
+    }
+   },
+   "type": "n8n-nodes-base.respondToWebhook",
+   "typeVersion": 1.1,
+   "position": [
+    -200,
+    300
+   ],
+   "id": "c86107fc-fd79-4069-9b0b-03cb0c419f76",
+   "name": "Responder"
+  }
+ ],
+ "connections": {
+  "Webhook": {
+   "main": [
+    [
+     {
+      "node": "Controle",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Controle": {
+   "main": [
+    [
+     {
+      "node": "Validar",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Validar": {
+   "main": [
+    [
+     {
+      "node": "Se ok",
+      "type": "main",
+      "index": 0
+     },
+     {
+      "node": "Responder",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Se ok": {
+   "main": [
+    [
+     {
+      "node": "Limpar fila CEEE",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Limpar fila CEEE": {
+   "main": [
+    [
+     {
+      "node": "Limpar fila RGE",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Limpar fila RGE": {
+   "main": [
+    [
+     {
+      "node": "Linhas CEEE",
+      "type": "main",
+      "index": 0
+     },
+     {
+      "node": "Linhas RGE",
+      "type": "main",
+      "index": 0
+     },
+     {
+      "node": "Arquivo",
+      "type": "main",
+      "index": 0
+     },
+     {
+      "node": "Metadados",
+      "type": "main",
+      "index": 0
+     },
+     {
+      "node": "Ligar filas",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Linhas CEEE": {
+   "main": [
+    [
+     {
+      "node": "Inserir CEEE",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Linhas RGE": {
+   "main": [
+    [
+     {
+      "node": "Inserir RGE",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Arquivo": {
+   "main": [
+    [
+     {
+      "node": "Gravar planilha",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Metadados": {
+   "main": [
+    [
+     {
+      "node": "Gravar metadados",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Ligar filas": {
+   "main": [
+    [
+     {
+      "node": "Salvar controle",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  }
+ },
+ "active": false,
+ "settings": {
+  "executionOrder": "v1"
+ },
+ "pinData": {}
+}
