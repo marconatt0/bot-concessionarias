@@ -26,5 +26,8 @@ d=json.load(sys.stdin)
 for c in d["controle"]: print("CTRL", c)
 for k in ("CEEE","RGE"):
   print("==", k)
-  for l in d[k]: print(f"{l[\"linha\"]:>3} {l[\"site\"]:8} {l[\"situacao\"]:22} {l[\"protocolo\"][:20]:20} rep={l[\"rep\"]} {l[\"em\"]} | {l[\"gatilho\"][:45]}" + (f"\n      ?? {l[\"desconhecida\"][:300]!r}" if l["desconhecida"] else ""))' < /opt/bot-tunel/backup/diagnostico.json
+  for l in d[k]:
+    g=lambda x: str(l.get(x) or "")
+    print("%3s %-8s %-24s %-20s rep=%s %s | %s" % (g("linha"), g("site"), g("situacao"), g("protocolo")[:20], g("rep"), g("em"), g("gatilho")[:45]))
+    if g("desconhecida"): print("      ?? " + repr(g("desconhecida")[:300]))' < /opt/bot-tunel/backup/diagnostico.json
 echo PASSO9-FIM
