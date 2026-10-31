@@ -73,9 +73,10 @@ def login() -> str:
         tentativas = st.session_state.get("tentativas", 0)
         if tentativas >= 5:
             time.sleep(min(30, 2 ** (tentativas - 4)))
-        hash_ = usuarios.get(usuario)
+        nome = next((n for n in usuarios if n.lower() == usuario), None)
+        hash_ = usuarios.get(nome) if nome else None
         if hash_ and bcrypt.checkpw(senha.encode(), str(hash_).encode()):
-            st.session_state["usuario"] = usuario
+            st.session_state["usuario"] = nome
             st.session_state["tentativas"] = 0
             st.rerun()
         st.session_state["tentativas"] = tentativas + 1
