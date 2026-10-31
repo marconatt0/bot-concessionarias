@@ -8,14 +8,15 @@ echo "Domínio gravado: $DOM"
 echo
 while true; do
   read -rsp ">>> Cole aqui o Authtoken do ngrok e aperte Enter: " TOK; echo
-  TOK=$(echo "$TOK" | tr -d '[:space:]')
-  [ ${#TOK} -ge 30 ] && break
-  echo "    Não parece um authtoken (${#TOK} caracteres). Tente de novo."
+  TOK=$(printf '%s' "$TOK" | tr -d '[:space:]')
+  if [[ "$TOK" =~ ^[A-Za-z0-9_]{30,80}$ ]]; then break; fi
+  echo "    Isso não é um authtoken (${#TOK} caracteres colados). Provavelmente a VM colou outra coisa."
+  echo "    Selecione o token na página do ngrok com o mouse e clique com o botão do MEIO aqui."
 done
-sed -i "s|^NGROK_AUTHTOKEN=.*|NGROK_AUTHTOKEN=$TOK|" .env
+grep -v '^NGROK_AUTHTOKEN=' .env > .env.novo; printf 'NGROK_AUTHTOKEN=%s\n' "$TOK" >> .env.novo; chmod 600 .env.novo; mv .env.novo .env
 unset TOK
 echo "Authtoken gravado no .env."
-docker compose --profile tunel up -d 2>&1 | tail -2
+docker compose --profile tunel up -d --force-recreate ngrok 2>&1 | tail -2
 sleep 8
 docker compose logs --tail 5 ngrok 2>&1 | grep -oE 'msg="[^"]*"|err=[^ ]*' | tail -5
 T=$(grep ^BOT_TOKEN= .env | cut -d= -f2)
